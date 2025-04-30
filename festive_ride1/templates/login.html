@@ -1,0 +1,23 @@
+<body>
+    <h2>Login Page</h2>
+    <form action="/admin" method="POST">
+        {{login_form.csrf_token}}
+        <p>
+            {{login_form.login_email.label}}
+            {{login_form.login_email}}
+        </p>
+        <p>
+            {{login_form.login_password.label}}
+            {{login_form.login_password}}
+        </p>
+        <p>
+            {{login_form.login_submit}}
+        </p>
+        <p style="color:red;">Don't have an account?<a href="/register">Register here</a></p>
+    </form>
+    {%if msg %}
+    <p style="color:green;"><strong>{{msg}}</strong></p>
+    <p><strong>{{msg}}</strong></p>
+    {%endif%}
+</body>
+</html>
