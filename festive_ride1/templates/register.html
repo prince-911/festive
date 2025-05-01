@@ -1,1 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>Register</title>
+   <style>
+       body {
+           margin: 0;
+           font-family: 'Segoe UI', sans-serif;
+           background-color: #fff;
+           display: flex;
+           height: 100vh;
+       }
 
+       .container {
+           display: flex;
+           flex: 1;
+       }
+
+       .form-section {
+           flex: 1;
+           display: flex;
+           flex-direction: column;
+           justify-content: center;
+           padding: 4rem;
+       }
+
+       .form-section h2 {
+           font-size: 2rem;
+           margin-bottom: 2rem;
+       }
+
+       form {
+           max-width: 400px;
+           width: 100%;
+       }
+
+       input[type="text"],
+       input[type="email"],
+       input[type="password"] {
+           width: 100%;
+           padding: 0.75rem 1rem;
+           margin-bottom: 1rem;
+           border-radius: 10px;
+           border: 1px solid #ccc;
+           background-color: #f9f9f9;
+       }
+
+       .privacy {
+           display: flex;
+           align-items: center;
+           margin: 1rem 0;
+           font-size: 0.9rem;
+       }
+
+       .privacy input {
+           margin-right: 0.5rem;
+       }
+
+       .registerBtn {
+           width: 100%;
+           background-color: #ff5a1f;
+           color: white;
+           border: none;
+           padding: 0.75rem;
+           border-radius: 10px;
+           cursor: pointer;
+           font-size: 1rem;
+       }
+
+       .link {
+           text-align: center;
+           margin-top: 1rem;
+           font-size: 0.9rem;
+       }
+
+       .link a {
+           color: #000;
+           text-decoration: none;
+           font-weight: bold;
+       }
+
+       .image-section {
+           flex: 1;
+           background: url("{{ url_for('static', filename='images/register.jpg') }}") no-repeat center center;
+           background-size: cover;
+       }
+
+       @media (max-width: 768px) {
+           .container {
+               flex-direction: column;
+           }
+
+           .image-section {
+               display: none;
+           }
+
+           .form-section {
+               padding: 2rem;
+           }
+       }
+   </style>
+</head>
+<body>
+<div class="container">
+   <div class="form-section">
+       <h2>Create an account</h2>
+
+       <form method="POST" action="/register">
+           {{ reg_form.csrf_token }}
+
+           {{ reg_form.reg_username(placeholder="Username") }}
+           {{ reg_form.reg_firstname(placeholder="First Name") }}
+           {{ reg_form.reg_middlename(placeholder="Middle Name") }}
+           {{ reg_form.reg_lastname(placeholder="Last Name") }}
+           {{ reg_form.reg_email(placeholder="Email") }}
+           {{ reg_form.reg_number(placeholder="Contact Number") }}
+           {{ reg_form.reg_password(placeholder="Password") }}
+           {{ reg_form.reg_confirm_password(placeholder="Confirm Password") }}
+
+           <div class="privacy">
+               <input type="checkbox" required>
+               I accept the <a href="#">Privacy Policy</a>
+           </div>
+
+           {{ reg_form.reg_submit(class_="registerBtn") }}
+       </form>
+
+       <div class="link">
+           Already have an account? <a href="/login">Log In</a>
+       </div>
+       {% if msg %}
+       <p style="color:green;">{{ msg }}</p>
+       {% endif %}
+   </div>
+
+   <div class="image-section">
+       <!-- Background handled in CSS -->
+   </div>
+</div>
+</body>
+</html>
+ 
