@@ -1,66 +1,314 @@
-Exception
-Exception: Install 'email_validator' for email validation support.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Festival Ride Management</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #f8f9fa;
+    }
 
-Traceback (most recent call last)
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\wtforms\validators.py", line 401, in __call__
-import email_validator
-^^^^^^^^^^^^^^^^^^^^^^
-The above exception was the direct cause of the following exception:
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\flask\app.py", line 1536, in __call__
-return self.wsgi_app(environ, start_response)
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
-            try:
-                ctx.push()Open an interactive python shell in this frame
-                response = self.full_dispatch_request()
-            except Exception as e:
-                error = e
-                response = self.handle_exception(e)
-                           ^^^^^^^^^^^^^^^^^^^^^^^^
-            except:  # noqa: B001
-                error = sys.exc_info()[1]
-                raise
-            return response(environ, start_response)
-        finally:
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
-response = self.full_dispatch_request()
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
-rv = self.handle_user_exception(e)
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-rv = self.dispatch_request()
-     ^^^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
-return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "c:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\app.py", line 39, in register
-if (reg.validate_on_submit()):
-    ^^^^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\flask_wtf\form.py", line 86, in validate_on_submit
-return self.is_submitted() and self.validate(extra_validators=extra_validators)
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\wtforms\form.py", line 330, in validate
-return super().validate(extra)
-       ^^^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\wtforms\form.py", line 147, in validate
-if not field.validate(self, extra):
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\wtforms\fields\core.py", line 234, in validate
-stop_validation = self._run_validation_chain(form, chain)
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\wtforms\fields\core.py", line 254, in _run_validation_chain
-validator(form, self)
-^^^^^^^^^^^^^^^^^^^^^
-File "C:\Users\prince09.TRN\Desktop\FestiveRide - Copy - Copy - Copy\.venv\Lib\site-packages\wtforms\validators.py", line 403, in __call__
-raise Exception(
-^^^^^^^^^^
-Exception: Install 'email_validator' for email validation support.
-The debugger caught an exception in your WSGI application. You can now look at the traceback which led to the error.
-To switch between the interactive traceback and the plaintext one, you can click on the "Traceback" headline. From the text traceback you can also create a paste of it. For code execution mouse-over the frame you want to debug and click on the console icon on the right side.
+    /* Navbar */
+    .navbar {
+      background: #4A148C;
+      color: white;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
 
-You can execute arbitrary Python code in the stack frames and there are some extra helpers available for introspection:
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      margin-left: 1rem;
+    }
 
-dump() shows all variables in the frame
-dump(obj) dumps all that's known about the object
-Brought to you by DON'T PANIC, your friendly Werkzeug powered traceback interpreter.
+    .navbar .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .navbar input[type="text"] {
+      padding: 5px 10px;
+      margin-right: 10px;
+      border-radius: 4px;
+      border: none;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: #fff;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+    }
+
+    .hero p {
+      margin: 1rem 0;
+      color: #555;
+    }
+
+    .carousel-container {
+      position: relative;
+      max-width: 90%;
+      margin: auto;
+      overflow: hidden;
+    }
+
+    .carousel-track {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    .slide-item {
+      min-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .slide-item img,
+    .slide-item video {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .slide-caption {
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+
+    .carousel-buttons {
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      transform: translateY(-50%);
+    }
+
+    .carousel-buttons button {
+      background: rgba(0, 0, 0, 0.5);
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .btn-browse {
+      margin-top: 1rem;
+      padding: 10px 20px;
+      background: #4A148C;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    section {
+      padding: 3rem 1rem;
+    }
+
+    .review-wrapper,
+    .about-app-section {
+      max-width: 1000px;
+      margin: auto;
+      text-align: center;
+    }
+
+    .review-card {
+      background: white;
+      padding: 1rem;
+      margin: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .col-md-4 {
+      flex: 1 1 300px;
+      max-width: 300px;
+    }
+
+    .footer {
+      background: #4A148C;
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    .social-icons a {
+      margin: 0 0.5rem;
+      color: white;
+      font-size: 1.2rem;
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      .carousel-buttons button {
+        font-size: 1rem;
+        padding: 0.4rem 0.8rem;
+      }
+
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .navbar .nav-links {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .navbar input[type="text"] {
+        margin: 10px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div><strong>Festival Ride Management</strong></div>
+    <div class="nav-links">
+      <input type="text" placeholder="Search rides" />
+      <a href="#">Home</a>
+      <a href="#about">About</a>
+      <a href="#reviews">Review</a>
+      <a href="/login">Login</a>
+      <a href="/register">Register</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Book Your Festival Ride Now!</h1>
+    <p>Find the perfect decorated ride for your celebrations!</p>
+
+    <!-- Carousel -->
+    <div class="carousel-container">
+      <div class="carousel-track" id="carousel-track">
+        <div class="slide-item">
+          <img src="https://cdn.dribbble.com/userupload/11469918/file/original-203227504d1398c738a1f1574e5205b2.png" />
+          <p class="slide-caption">Chatt Puja</p>
+        </div>
+        <div class="slide-item">
+          <img src="https://cdn.dribbble.com/userupload/22250677/file/original-bcfdecd5b7f0f697c2ae31ac198da60f.gif" />
+          <p class="slide-caption">Diwali</p>
+        </div>
+        <div class="slide-item">
+          <video autoplay muted loop playsinline>
+            <source src="https://cdn.dribbble.com/userupload/18138799/file/original-dd2fc3edb02bc23a8ef7df4657f86e54.mp4" type="video/mp4" />
+          </video>
+          <p class="slide-caption">Festival Parade</p>
+        </div>
+      </div>
+      <div class="carousel-buttons">
+        <button id="prev">&#10094;</button>
+        <button id="next">&#10095;</button>
+      </div>
+    </div>
+
+    <a href="rides.html" class="btn-browse">Browse Rides</a>
+  </section>
+
+  <!-- Reviews -->
+  <section id="reviews">
+    <div class="review-wrapper">
+      <h2>What Our Users Say</h2>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="review-card">
+            <p>"Amazing experience! The ride was beautifully decorated and made our celebration memorable."</p>
+            <strong>- Riya Singh</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="review-card">
+            <p>"Very easy to book, and the driver was punctual. Great service!"</p>
+            <strong>- Aman Verma</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="review-card">
+            <p>"Perfect for weddings and cultural events. Highly recommended."</p>
+            <strong>- Neha Patel</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="about-app-section">
+    <div class="row">
+      <div class="col-md-4">
+        <h4>Why Festival Ride?</h4>
+        <p>Festival Ride is your trusted partner for cultural events. With beautiful rides, seamless booking, and reliable service, we help you celebrate traditions in style.</p>
+      </div>
+      <div class="col-md-4">
+        <h4>Easy Booking Experience</h4>
+        <p>Our platform provides filters for ride type, event theme, and location. With 24/7 support and verified drivers, you’re always covered.</p>
+      </div>
+      <div class="col-md-4">
+        <h4>Celebrations Made Memorable</h4>
+        <p>From Diwali to weddings, Festival Ride offers decorated vehicles that make your day unforgettable—with affordable pricing and timely service.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="social-icons">
+      <a href="#">IG</a>
+      <a href="#">X</a>
+      <a href="#">LI</a>
+      <a href="#">FB</a>
+    </div>
+    <p>&copy; 2025 FESTIVAL RIDE PVT. LTD.</p>
+  </footer>
+
+  <!-- Carousel Script -->
+  <script>
+    const track = document.getElementById("carousel-track");
+    const slides = document.querySelectorAll(".slide-item");
+    const prev = document.getElementById("prev");
+    const next = document.getElementById("next");
+
+    let index = 0;
+    const totalSlides = slides.length;
+
+    function updateSlide() {
+      track.style.transform = `translateX(-${index * 100}%)`;
+    }
+
+    function showNext() {
+      index = (index + 1) % totalSlides;
+      updateSlide();
+    }
+
+    function showPrev() {
+      index = (index - 1 + totalSlides) % totalSlides;
+      updateSlide();
+    }
+
+    next.addEventListener("click", showNext);
+    prev.addEventListener("click", showPrev);
+
+    setInterval(showNext, 5000); // auto-scroll every 5 seconds
+  </script>
+</body>
+</html>
