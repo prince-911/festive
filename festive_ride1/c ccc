@@ -1,314 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Festival Ride Management</title>
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      margin: 0;
-      background: #f8f9fa;
-    }
+    <meta charset="UTF-8">
+    <title>Select Theme</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            transition: background-image 0.5s ease-in-out;
+        }
 
-    /* Navbar */
-    .navbar {
-      background: #4A148C;
-      color: white;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-    }
+        .form-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
 
-    .navbar a {
-      color: white;
-      text-decoration: none;
-      margin-left: 1rem;
-    }
+        h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
 
-    .navbar .nav-links {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+        label {
+            display: block;
+            margin: 0.5rem 0 0.25rem;
+        }
 
-    .navbar input[type="text"] {
-      padding: 5px 10px;
-      margin-right: 10px;
-      border-radius: 4px;
-      border: none;
-    }
+        select, button {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 1rem;
+        }
 
-    .hero {
-      text-align: center;
-      padding: 3rem 2rem;
-      background: #fff;
-    }
-
-    .hero h1 {
-      font-size: 2.5rem;
-    }
-
-    .hero p {
-      margin: 1rem 0;
-      color: #555;
-    }
-
-    .carousel-container {
-      position: relative;
-      max-width: 90%;
-      margin: auto;
-      overflow: hidden;
-    }
-
-    .carousel-track {
-      display: flex;
-      transition: transform 0.5s ease-in-out;
-    }
-
-    .slide-item {
-      min-width: 100%;
-      box-sizing: border-box;
-    }
-
-    .slide-item img,
-    .slide-item video {
-      width: 100%;
-      border-radius: 8px;
-    }
-
-    .slide-caption {
-      margin-top: 0.5rem;
-      font-weight: bold;
-    }
-
-    .carousel-buttons {
-      position: absolute;
-      top: 50%;
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      transform: translateY(-50%);
-    }
-
-    .carousel-buttons button {
-      background: rgba(0, 0, 0, 0.5);
-      border: none;
-      color: white;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      font-size: 1.2rem;
-    }
-
-    .btn-browse {
-      margin-top: 1rem;
-      padding: 10px 20px;
-      background: #4A148C;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    section {
-      padding: 3rem 1rem;
-    }
-
-    .review-wrapper,
-    .about-app-section {
-      max-width: 1000px;
-      margin: auto;
-      text-align: center;
-    }
-
-    .review-card {
-      background: white;
-      padding: 1rem;
-      margin: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .col-md-4 {
-      flex: 1 1 300px;
-      max-width: 300px;
-    }
-
-    .footer {
-      background: #4A148C;
-      color: white;
-      padding: 2rem 1rem;
-      text-align: center;
-    }
-
-    .social-icons a {
-      margin: 0 0.5rem;
-      color: white;
-      font-size: 1.2rem;
-      text-decoration: none;
-    }
-
-    @media (max-width: 768px) {
-      .carousel-buttons button {
-        font-size: 1rem;
-        padding: 0.4rem 0.8rem;
-      }
-
-      .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .navbar .nav-links {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .navbar input[type="text"] {
-        margin: 10px 0;
-      }
-    }
-  </style>
+        button {
+            background-color: #ff5a1f;
+            color: white;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+    </style>
 </head>
-<body>
+<body id="main-body">
 
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div><strong>Festival Ride Management</strong></div>
-    <div class="nav-links">
-      <input type="text" placeholder="Search rides" />
-      <a href="#">Home</a>
-      <a href="#about">About</a>
-      <a href="#reviews">Review</a>
-      <a href="/login">Login</a>
-      <a href="/register">Register</a>
-    </div>
-  </nav>
+<div class="form-container">
+    <h2>Select Event and Theme</h2>
+    <form method="POST" action="/select-theme">
+        <label for="event">Event:</label>
+        <select name="event" id="event">
+            <option value="">-- Select Event --</option>
+            <option value="diwali">Diwali</option>
+            <option value="christmas">Christmas</option>
+            <option value="birthday">Birthday</option>
+        </select>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <h1>Book Your Festival Ride Now!</h1>
-    <p>Find the perfect decorated ride for your celebrations!</p>
+        <label for="theme">Theme:</label>
+        <select name="theme" id="theme" required>
+            <option value="">-- Select Theme --</option>
+        </select>
 
-    <!-- Carousel -->
-    <div class="carousel-container">
-      <div class="carousel-track" id="carousel-track">
-        <div class="slide-item">
-          <img src="https://cdn.dribbble.com/userupload/11469918/file/original-203227504d1398c738a1f1574e5205b2.png" />
-          <p class="slide-caption">Chatt Puja</p>
-        </div>
-        <div class="slide-item">
-          <img src="https://cdn.dribbble.com/userupload/22250677/file/original-bcfdecd5b7f0f697c2ae31ac198da60f.gif" />
-          <p class="slide-caption">Diwali</p>
-        </div>
-        <div class="slide-item">
-          <video autoplay muted loop playsinline>
-            <source src="https://cdn.dribbble.com/userupload/18138799/file/original-dd2fc3edb02bc23a8ef7df4657f86e54.mp4" type="video/mp4" />
-          </video>
-          <p class="slide-caption">Festival Parade</p>
-        </div>
-      </div>
-      <div class="carousel-buttons">
-        <button id="prev">&#10094;</button>
-        <button id="next">&#10095;</button>
-      </div>
-    </div>
+        <button type="submit">Submit</button>
+    </form>
+</div>
 
-    <a href="rides.html" class="btn-browse">Browse Rides</a>
-  </section>
+<script>
+    const eventSelect = document.getElementById('event');
+    const themeSelect = document.getElementById('theme');
+    const body = document.getElementById('main-body');
 
-  <!-- Reviews -->
-  <section id="reviews">
-    <div class="review-wrapper">
-      <h2>What Our Users Say</h2>
-      <div class="row">
-        <div class="col-md-4">
-          <div class="review-card">
-            <p>"Amazing experience! The ride was beautifully decorated and made our celebration memorable."</p>
-            <strong>- Riya Singh</strong>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="review-card">
-            <p>"Very easy to book, and the driver was punctual. Great service!"</p>
-            <strong>- Aman Verma</strong>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="review-card">
-            <p>"Perfect for weddings and cultural events. Highly recommended."</p>
-            <strong>- Neha Patel</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+    const themesByEvent = {
+        diwali: ['Lights', 'Traditional', 'Modern'],
+        christmas: ['Snowy', 'Santa', 'Gifts'],
+        birthday: ['Balloons', 'Minimal', 'Fun']
+    };
 
-  <!-- About -->
-  <section id="about" class="about-app-section">
-    <div class="row">
-      <div class="col-md-4">
-        <h4>Why Festival Ride?</h4>
-        <p>Festival Ride is your trusted partner for cultural events. With beautiful rides, seamless booking, and reliable service, we help you celebrate traditions in style.</p>
-      </div>
-      <div class="col-md-4">
-        <h4>Easy Booking Experience</h4>
-        <p>Our platform provides filters for ride type, event theme, and location. With 24/7 support and verified drivers, you’re always covered.</p>
-      </div>
-      <div class="col-md-4">
-        <h4>Celebrations Made Memorable</h4>
-        <p>From Diwali to weddings, Festival Ride offers decorated vehicles that make your day unforgettable—with affordable pricing and timely service.</p>
-      </div>
-    </div>
-  </section>
+    const backgroundImages = {
+        Lights: '/static/images/diwali_lights.jpg',
+        Traditional: 'diwali_traditional.jpeg',
+        Modern: '/static/images/diwali_modern.jpg',
+        Snowy: '/static/images/christmas_snowy.jpg',
+        Santa: '/static/images/christmas_santa.jpg',
+        Gifts: '/static/images/christmas_gifts.jpg',
+        Balloons: '/static/images/birthday_balloons.jpg',
+        Minimal: '/static/images/birthday_minimal.jpg',
+        Fun: '/static/images/birthday_fun.jpg'
+    };
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="social-icons">
-      <a href="#">IG</a>
-      <a href="#">X</a>
-      <a href="#">LI</a>
-      <a href="#">FB</a>
-    </div>
-    <p>&copy; 2025 FESTIVAL RIDE PVT. LTD.</p>
-  </footer>
+    eventSelect.addEventListener('change', () => {
+        const selectedEvent = eventSelect.value;
+        themeSelect.innerHTML = '<option value="">-- Select Theme --</option>';
+        if (themesByEvent[selectedEvent]) {
+            themesByEvent[selectedEvent].forEach(theme => {
+                const opt = document.createElement('option');
+                opt.value = theme;
+                opt.textContent = theme;
+                themeSelect.appendChild(opt);
+            });
+        }
+        // Reset background
+        body.style.backgroundImage = '';
+    });
 
-  <!-- Carousel Script -->
-  <script>
-    const track = document.getElementById("carousel-track");
-    const slides = document.querySelectorAll(".slide-item");
-    const prev = document.getElementById("prev");
-    const next = document.getElementById("next");
+    themeSelect.addEventListener('change', () => {
+        const selectedTheme = themeSelect.value;
+        if (backgroundImages[selectedTheme]) {
+            body.style.backgroundImage = `url('${backgroundImages[selectedTheme]}')`;
+        }
+    });
+</script>
 
-    let index = 0;
-    const totalSlides = slides.length;
-
-    function updateSlide() {
-      track.style.transform = `translateX(-${index * 100}%)`;
-    }
-
-    function showNext() {
-      index = (index + 1) % totalSlides;
-      updateSlide();
-    }
-
-    function showPrev() {
-      index = (index - 1 + totalSlides) % totalSlides;
-      updateSlide();
-    }
-
-    next.addEventListener("click", showNext);
-    prev.addEventListener("click", showPrev);
-
-    setInterval(showNext, 5000); // auto-scroll every 5 seconds
-  </script>
 </body>
 </html>
+
+
+
+
+@app.route('/select-theme', methods=['GET', 'POST'])
+def select_theme():
+    if request.method == 'POST':
+        event = request.form.get('event')
+        theme = request.form.get('theme')
+        
+        if event and theme:
+            selection = ThemeSelection(event=event, theme=theme)
+            db.session.add(selection)
+            db.session.commit()
+            return redirect(url_for('success', theme=theme))
+        else:
+            return render_template('select_theme.html', error="Please select both event and theme.")
+    
+    return render_template('select_theme.html')
+
+@app.route('/success')
+def success():
+    theme = request.args.get('theme')
+    return f"<h2>Theme '{theme}' successfully saved!</h2><a href='/select-theme'>Select Again</a>"
