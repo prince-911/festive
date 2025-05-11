@@ -1,5 +1,3 @@
-register.html
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,17 +13,16 @@ register.html
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow-x: hidden;
     }
 
     .register-container {
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      padding-top: 40px;
+      padding: 40px 20px;
       min-height: 100vh;
       background: linear-gradient(135deg, #878baa,#be94a5,#878baa,rgb(163, 175, 140));
-      padding-left: 20px;
-      padding-right: 20px;
     }
 
     .register-card {
@@ -45,7 +42,6 @@ register.html
       min-width: 300px;
       background: url('https://cdn.dribbble.com/users/2026576/screenshots/16392415/media/8a9e3b221f007994f22d802a3944079d.png') no-repeat center;
       background-size: cover;
-      height: auto;
     }
 
     .form-container {
@@ -124,6 +120,12 @@ register.html
       }
     }
 
+    .error-message {
+      color: blue;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
     @media (max-width: 768px) {
       .register-card {
         flex-direction: column;
@@ -158,6 +160,20 @@ register.html
       <div class="image-container"></div>
       <div class="form-container">
         <h2>REGISTER YOURSELF</h2>
+
+        <!-- Show first error in order -->
+        {% if res.name.errors %}
+          <div class="error-message">{{ res.name.errors[0] }}</div>
+        {% elif res.phone.errors %}
+          <div class="error-message">{{ res.phone.errors[0] }}</div>
+        {% elif res.email.errors %}
+          <div class="error-message">{{ res.email.errors[0] }}</div>
+        {% elif res.password.errors %}
+          <div class="error-message">{{ res.password.errors[0] }}</div>
+        {% elif res.confirmpassword.errors %}
+          <div class="error-message">{{ res.confirmpassword.errors[0] }}</div>
+        {% endif %}
+
         <form action="/register" method="POST">
           {{ res.csrf_token }}
           {{ res.hidden_tag() }}
@@ -166,9 +182,6 @@ register.html
           {{ res.userrole(class_="select") }}
 
           {{ res.name(class_="datafield", placeholder="Full Name") }}
-          {% for error in res.name.errors %}
-            <span style="color:blue">{{ error }}</span><br>
-          {% endfor %}
 
           {{ res.gender.label }}<br>
           <div class="radio">
@@ -178,24 +191,9 @@ register.html
           </div>
 
           {{ res.phone(class_="datafield", placeholder="Phone Number") }}
-          {% for error in res.phone.errors %}
-            <span style="color:blue">{{ error }}</span><br>
-          {% endfor %}
-
           {{ res.email(class_="datafield", placeholder="Email Address") }}
-          {% for error in res.email.errors %}
-            <span style="color:blue">{{ error }}</span><br>
-          {% endfor %}
-
           {{ res.password(class_="datafield", placeholder="Password") }}
-          {% for error in res.password.errors %}
-            <span style="color:blue">{{ error }}</span><br>
-          {% endfor %}
-
           {{ res.confirmpassword(class_="datafield", placeholder="Confirm Password") }}
-          {% for error in res.confirmpassword.errors %}
-            <span style="color:blue">{{ error }}</span><br>
-          {% endfor %}
 
           {{ res.submit(class_="button") }}
 
@@ -208,35 +206,3 @@ register.html
   </div>
 </body>
 </html>
-
-form.py
-from flask_wtf import FlaskForm
-from wtforms import StringField,PasswordField,EmailField,IntegerField,SubmitField,DateField,SelectField,TimeField,RadioField
-from wtforms.validators import DataRequired,Regexp,Length,EqualTo
-
-class LoginForm(FlaskForm):
-   userrole=SelectField("Role",validators=[DataRequired()],choices=[('','Select The Role'),('user','User'),('admin','Admin')])
-   email=EmailField("Email Id",validators=[DataRequired(),Length(max=50),Regexp(r'[^@]+@[^@]+\.[^@]+', message='Invalid Email Address')], render_kw = {"placeholder": "Email Address", "class": "datafield"})
-   password=PasswordField("Password",validators=[DataRequired(),Length(min=6,max=50,message='Password consist of at least 1 capital,small,alphanumeric charater'),Regexp(r'(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$',message='Invalid Password')],render_kw={"placeholder": "Password", "class": "datafield"})
-   submit=SubmitField("Submit")
-
-class RegisterForm(FlaskForm):
-   userrole=SelectField("Role",validators=[DataRequired()],choices=[('','Select The Role'),('user','User'),('admin','Admin')])
-   name=StringField("Full Name",validators=[DataRequired(),Length(max=100),Regexp(r'^([A-Z][a-z]+)( [A-Z][a-z]+){1,2}',message='Name is not valid')],render_kw={"placeholder": "Name", "class": "datafield"})
-   email=EmailField("Email",validators=[DataRequired(),Length(max=50),Regexp(r'[^@]+@[^@]+\.[^@]+',message='Invalid Email Address')], render_kw = {"placeholder": "Email Address", "class": "datafield"})
-   gender=RadioField("Gender",validators=[DataRequired()],choices=[('female','Female'),('male','Male'),('others','Others')])
-   phone=StringField("Phone Number",validators=[DataRequired(),Regexp(r'^\d{10}$',message='Phone is not valid')],render_kw={"placeholder": "Phone Number", "class": "datafield"})
-   password=PasswordField("Password",validators=[DataRequired(),Length(min=6,max=50,message='Password consist of at least 1 capital,small,alphanumeric charater'),Regexp(r'(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$',message='Invalid Password')],render_kw={"placeholder": "Password", "class": "datafield"})
-   confirmpassword=PasswordField("Confirm Password",validators=[DataRequired(),EqualTo('password',message='Confirm Password must match Password')],render_kw = {"placeholder": "Confirm Password", "class": "datafield"})
-   submit=SubmitField("Submit")
-
-class BookingForm(FlaskForm):
-   date=DateField("Date",validators=[DataRequired()],render_kw={ "class": "datafield"})
-   starttime=TimeField("Start Time",validators=[DataRequired()],render_kw={ "class": "datafield"})
-   endtime=TimeField("End Time",validators=[DataRequired()],render_kw={"class": "datafield"})
-   location=SelectField("Location",validators=[DataRequired()],choices=[('','Select The Location'),('banglore','Banglore'),('pune','Pune'),('manglore','Manglore')])
-   submit=SubmitField("BOOK NOW")     
-
-      
-   
-
