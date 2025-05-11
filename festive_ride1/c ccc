@@ -1,208 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>REGISTER PAGE</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+   <title>Home Page</title>
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet"/>
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      overflow-x: hidden;
-    }
-
-    .register-container {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 40px 20px;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #878baa,#be94a5,#878baa,rgb(163, 175, 140));
-    }
-
-    .register-card {
-      display: flex;
-      width: 900px;
-      max-width: 100%;
-      border-radius: 10px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
-      background-color: white;
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-
-    .image-container {
-      flex: 1;
-      min-width: 300px;
-      background: url('https://cdn.dribbble.com/users/2026576/screenshots/16392415/media/8a9e3b221f007994f22d802a3944079d.png') no-repeat center;
-      background-size: cover;
-    }
-
-    .form-container {
-      flex: 1;
-      min-width: 300px;
-      padding: 40px;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-
-    .select, .datafield {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    .button {
-      width: 100%;
-      padding: 10px;
-      background-color: #4a55b8;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .button:hover {
-      background-color: #3a4474;
-    }
-
-    .radio {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      margin-bottom: 20px;
-    }
-
-    .link {
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .link a {
-      color: #007BFF;
-      text-decoration: none;
-    }
-
-    .link a:hover {
-      text-decoration: underline;
-    }
-
-    .flash-message {
-      margin: 20px auto;
-      padding: 15px 25px;
-      width: 50%;
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-      border-radius: 5px;
-      text-align: center;
-      font-weight: bold;
-      animation: fadeOut 1s ease-out 1s forwards;
-    }
-
-    @keyframes fadeOut {
-      to {
-        opacity: 0;
-        visibility: hidden;
-      }
-    }
-
-    .error-message {
-      color: blue;
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    @media (max-width: 768px) {
-      .register-card {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .image-container {
-        height: 200px;
-        background-position: center top;
-        width: 100%;
-      }
-
-      .form-container {
-        padding: 20px;
-        width: 100%;
-      }
-    }
-  </style>
 </head>
 <body>
+   <!-- Navbar column -->
+   <div class="navbar">
+       <div class="left-items">
+           <h4>SKY RIDER</h4>
+       </div>
+       <div class="right-items">
+           <a href="/" class="navButton">HOME</a>
+           <a href="#about" class="navButton">ABOUT</a>
+           <a href="#review" class="navButton">REVIEW</a>
+           <a href="/login" class="navButton">LOGIN</a>
+           <a href="/register" class="navButton">REGISTER</a>
+       </div>
+   </div>
 
-  <div class="register-container">
-    {% with messages=get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash-message">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <div class="register-card">
-      <div class="image-container"></div>
-      <div class="form-container">
-        <h2>REGISTER YOURSELF</h2>
-
-        <!-- Show first error in order -->
-        {% if res.name.errors %}
-          <div class="error-message">{{ res.name.errors[0] }}</div>
-        {% elif res.phone.errors %}
-          <div class="error-message">{{ res.phone.errors[0] }}</div>
-        {% elif res.email.errors %}
-          <div class="error-message">{{ res.email.errors[0] }}</div>
-        {% elif res.password.errors %}
-          <div class="error-message">{{ res.password.errors[0] }}</div>
-        {% elif res.confirmpassword.errors %}
-          <div class="error-message">{{ res.confirmpassword.errors[0] }}</div>
-        {% endif %}
-
-        <form action="/register" method="POST">
-          {{ res.csrf_token }}
-          {{ res.hidden_tag() }}
-
-          {{ res.userrole.label }}
-          {{ res.userrole(class_="select") }}
-
-          {{ res.name(class_="datafield", placeholder="Full Name") }}
-
-          {{ res.gender.label }}<br>
-          <div class="radio">
-            {% for ch in res.gender %}
-              {{ ch }} {{ ch.label }}
-            {% endfor %}
-          </div>
-
-          {{ res.phone(class_="datafield", placeholder="Phone Number") }}
-          {{ res.email(class_="datafield", placeholder="Email Address") }}
-          {{ res.password(class_="datafield", placeholder="Password") }}
-          {{ res.confirmpassword(class_="datafield", placeholder="Confirm Password") }}
-
-          {{ res.submit(class_="button") }}
-
-          <div class="link">
-            Already have an account? <a href="/login">Log In</a>
-          </div>
-        </form>
+   <!-- Hero section start -->
+   <div class="hero-section">
+    <h1 style="margin-top: 80px;">Hola Guest!</h1>
+       </div>
+ <!-- Main Content -->
+ <div class="main-content">
+    <!-- Carousel -->
+    <div id="carouselExampleDark" class="carousel carousel-dark slide" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="2" aria-label="Slide 3"></button>
       </div>
+      <div class="carousel-inner">
+        <div class="carousel-item active" data-bs-interval="5000">
+          <img src="https://tse4.mm.bing.net/th/id/OIP.h5Wxes0O1vDAL5Z1RTnuwQHaE7?rs=1&pid=ImgDetMain" class="d-block w-100" alt="First Ride">
+          <div class="carousel-caption d-none d-md-block">
+            <h5 style="color:white;">Thrilling Heights</h5>
+            <p style="color:white;">Experience the ultimate adrenaline rush.</p>
+          </div>
+        </div>
+        <div class="carousel-item" data-bs-interval="5000">
+          <img src="https://cdn.dribbble.com/userupload/22250677/file/original-bcfdecd5b7f0f697c2ae31ac198da60f.gif" class="d-block w-100" alt="Second Ride">
+          <div class="carousel-caption d-none d-md-block">
+            <h5 style="color:white;">Family Fun</h5>
+            <p style="color:white;">Safe and exciting rides for everyone.</p>
+          </div>
+        </div>
+        <div class="carousel-item" data-bs-interval="5000">
+          <img src="https://tse3.mm.bing.net/th/id/OIP.-bmtmRVmfwaRnhTNYoPUAAHaEo?rs=1&pid=ImgDetMain" class="d-block w-100" alt="Third Ride">
+          <div class="carousel-caption d-none d-md-block">
+            <h5 style="color:white;">Night Adventures</h5>
+            <p style="color:white;">Lights, music, and unforgettable moments.</p>
+          </div>
+        </div>
+       
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
     </div>
   </div>
+  <div class="container">
+    <h1>Your Celebration Starts Here</h1>
+    <p>Your gateway to festive exploration</p>
+
+  </div>
+  <div>
+    <div class="card-container-custom d-flex flex-wrap justify-content-center gap-4 my-5">
+        <div class="ride-card">
+            <div class="ride-img-wrapper">
+              <img src="{{ url_for('static', filename='img/classy_car.jpg') }}" class="ride-img" alt="...">
+            </div>
+            <div class="ride-details">
+              <h5 class="card-title">Car</h5>
+              <p class="card-text">click on Explore to check the related themes</p>
+              <a href="/login" class="btn">Explore</a>
+            </div>
+          </div>
+          <div class="ride-card">
+            <div class="ride-img-wrapper">
+              <img src="https://www.pixelstalk.net/wp-content/uploads/2016/04/Happy-Birthday-Wallpapers-HD-Images-Pictures.jpg" class="ride-img" alt="...">
+            </div>
+            <div class="ride-details">
+              <h5 class="card-title">Birthday</h5>
+              <p class="card-text">Fly through the clouds on a thrilling glider ride.</p>
+              <a href="/login" class="btn">Explore</a>
+            </div>
+          </div>
+          <div class="ride-card">
+            <div class="ride-img-wrapper">
+              <img src="{{ url_for('static', filename='img/resturant.jpg') }}" class="ride-img" alt="...">
+            </div>
+            <div class="ride-details">
+              <h5 class="card-title">Resturant</h5>
+              <p class="card-text">Fly through the clouds on a thrilling glider ride.</p>
+              <a href="/login" class="btn">Explore</a>
+            </div>
+          </div>
+        
+      </div>
+     </div>
+    
+ <!-- Review Section -->
+ <section id="reviews">
+    <div class="container review-wrapper text-center">
+      <h2 class="mb-5">What Our Users Say</h2>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="review-card">
+            <p>"Amazing experience! The ride was beautifully decorated and made our celebration memorable."</p>
+            <strong>- Riya Singh</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="review-card">
+            <p>"Very easy to book, and the driver was punctual. Great service!"</p>
+            <strong>- Aman Verma</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="review-card">
+            <p>"Perfect for weddings and cultural events. Highly recommended."</p>
+            <strong>- Neha Patel</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- About the App Section -->
+<section id="about" class="about-app-section">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h4>Why Festival Ride?</h4>
+          <p>
+            Festival Ride is your trusted partner for making cultural events vibrant and joyful. With beautifully decorated rides, seamless booking, and reliable service, we help you celebrate traditions in style and ease.
+          </p>
+        </div>
+        <div class="col-md-4">
+          <h4>Easy Booking Experience</h4>
+          <p>
+            Our platform ensures a smooth ride booking process with filters for ride type, event theme, and location. With 24/7 support and verified drivers, you’re in safe hands throughout your celebration.
+          </p>
+        </div>
+        <div class="col-md-4">
+          <h4>Celebrations Made Memorable</h4>
+          <p>
+            Whether it's Diwali, Chhath Puja, weddings, or a carnival, Festival Ride offers custom-decorated vehicles that turn heads. Experience affordable pricing, timely service, and lasting memories.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+
+  
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container text-center">
+      <div class="row">
+        <div class="col-12">
+          <div class="social-icons">
+            <a href="#"><i class="bi bi-instagram"></i></a>
+            <a href="#"><i class="bi bi-twitter-x"></i></a>
+            <a href="#"><i class="bi bi-linkedin"></i></a>
+            <a href="#"><i class="bi bi-facebook"></i></a>
+          </div>
+          <p class="mt-3 mb-0">&copy; 2025 FESTIVAL RIDE PVT. LTD.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 </body>
 </html>
+
+
+
+</body>
+</html>
+
+
+
+  
