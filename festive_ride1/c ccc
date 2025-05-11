@@ -1,3 +1,5 @@
+register.html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -206,3 +208,35 @@
   </div>
 </body>
 </html>
+
+form.py
+from flask_wtf import FlaskForm
+from wtforms import StringField,PasswordField,EmailField,IntegerField,SubmitField,DateField,SelectField,TimeField,RadioField
+from wtforms.validators import DataRequired,Regexp,Length,EqualTo
+
+class LoginForm(FlaskForm):
+   userrole=SelectField("Role",validators=[DataRequired()],choices=[('','Select The Role'),('user','User'),('admin','Admin')])
+   email=EmailField("Email Id",validators=[DataRequired(),Length(max=50),Regexp(r'[^@]+@[^@]+\.[^@]+', message='Invalid Email Address')], render_kw = {"placeholder": "Email Address", "class": "datafield"})
+   password=PasswordField("Password",validators=[DataRequired(),Length(min=6,max=50,message='Password consist of at least 1 capital,small,alphanumeric charater'),Regexp(r'(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$',message='Invalid Password')],render_kw={"placeholder": "Password", "class": "datafield"})
+   submit=SubmitField("Submit")
+
+class RegisterForm(FlaskForm):
+   userrole=SelectField("Role",validators=[DataRequired()],choices=[('','Select The Role'),('user','User'),('admin','Admin')])
+   name=StringField("Full Name",validators=[DataRequired(),Length(max=100),Regexp(r'^([A-Z][a-z]+)( [A-Z][a-z]+){1,2}',message='Name is not valid')],render_kw={"placeholder": "Name", "class": "datafield"})
+   email=EmailField("Email",validators=[DataRequired(),Length(max=50),Regexp(r'[^@]+@[^@]+\.[^@]+',message='Invalid Email Address')], render_kw = {"placeholder": "Email Address", "class": "datafield"})
+   gender=RadioField("Gender",validators=[DataRequired()],choices=[('female','Female'),('male','Male'),('others','Others')])
+   phone=StringField("Phone Number",validators=[DataRequired(),Regexp(r'^\d{10}$',message='Phone is not valid')],render_kw={"placeholder": "Phone Number", "class": "datafield"})
+   password=PasswordField("Password",validators=[DataRequired(),Length(min=6,max=50,message='Password consist of at least 1 capital,small,alphanumeric charater'),Regexp(r'(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$',message='Invalid Password')],render_kw={"placeholder": "Password", "class": "datafield"})
+   confirmpassword=PasswordField("Confirm Password",validators=[DataRequired(),EqualTo('password',message='Confirm Password must match Password')],render_kw = {"placeholder": "Confirm Password", "class": "datafield"})
+   submit=SubmitField("Submit")
+
+class BookingForm(FlaskForm):
+   date=DateField("Date",validators=[DataRequired()],render_kw={ "class": "datafield"})
+   starttime=TimeField("Start Time",validators=[DataRequired()],render_kw={ "class": "datafield"})
+   endtime=TimeField("End Time",validators=[DataRequired()],render_kw={"class": "datafield"})
+   location=SelectField("Location",validators=[DataRequired()],choices=[('','Select The Location'),('banglore','Banglore'),('pune','Pune'),('manglore','Manglore')])
+   submit=SubmitField("BOOK NOW")     
+
+      
+   
+
