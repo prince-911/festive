@@ -6,63 +6,42 @@ from form import LoginForm, RegisterForm, BookingForm
 from main import user_login_form, user_register_form, admin_login_form, admin_register_form, book_events, get_admin_data, get_user_data
 from flask_wtf.csrf import CSRFProtect
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    msg=""
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    res = RegisterForm()
+    if res.validate_on_submit():
+        role = res.userrole.data
+        name = res.name.data
+        gender = res.gender.data
+        phone = res.phone.data
+        email = res.email.data
+        password = res.password.data
 
-    if form.validate_on_submit():
-        role = form.userrole.data
-        email = form.email.data
-        password = form.password.data
-
-        # Check user credentials
         if role == 'user':
-            checkuser = user_login_form(role, email, password)
-            checkadmin = admin_login_form(role, email, password)
-
-            if checkuser == "Incorrect":
-                flash("Invalid credentials or incorrect password.")
+            checkuser = user_register_form(role, name, gender, phone, email, password)
+            checkadmin = admin_register_form(role, name, gender, phone, email, password)
+            if checkuser == 0:
+                flash("User registered successfully")
                 return redirect(url_for('login'))
-            elif checkuser == "No Data":
-                flash("No user found. Please register.")
-                return redirect(url_for("register"))
+            elif checkuser == 1:
+                flash("User already exists")
+                return redirect(url_for('login'))
             elif checkadmin:
-                flash("Admin cannot login as user.")
-                return redirect(url_for("login"))
-            else:
-                # Session should be set here
-                session['username'] = checkuser
-                session.permanent = True  # Keeps session on page reload
-                flash("User login successful")
-                return redirect(url_for('index'))  # Redirect to a page after login
-
-        elif role == 'admin':
-            checkuser = user_login_form(role, email, password)
-            checkadmin = admin_login_form(role, email, password)
-
-            if checkadmin == "Incorrect":
-                flash("Invalid credentials or incorrect password.")
-                return redirect(url_for('login'))
-            elif checkadmin == "No Data":
-                flash("No admin found. Please register.")
+                flash("Error: Admin credentials cannot be used as user")
                 return redirect(url_for('register'))
-            elif checkuser:
-                flash("User cannot login as admin.")
+        elif role == 'admin':
+            checkadmin = admin_register_form(role, name, gender, phone, email, password)
+            checkuser = user_register_form(role, name, gender, phone, email, password)
+            if checkadmin == 0:
+                flash("Admin registered successfully")
                 return redirect(url_for('login'))
-            else:
-                # Session should be set here
-                session['username'] = checkadmin
-                session.permanent = True  # Keeps session on page reload
-                flash("Admin login successful")
-                return redirect(url_for('index'))  # Redirect to a page after login
-
-    # If GET request or invalid POST (form not valid), reset fields only after POST
-    if request.method == 'GET':  # After refresh or page reload
-        form.email.data = ""
-        form.password.data = ""
-
-    return render_template("login.html", res=form)
+            elif checkadmin == 1:
+                flash("Admin already exists")
+                return redirect(url_for('login'))
+            elif checkuser:
+                flash("Error: User credentials cannot be used as Admin")
+                return redirect(url_for('register'))
+    return render_template('register.html', res=res)
 
 main.py
 
