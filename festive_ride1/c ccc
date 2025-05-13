@@ -5,21 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login Page</title>
   <style>
-    /* Cursor and focus fixes */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
       background-color: #1e1e1e;
-      cursor: default;
-    }
-
-    input, select, textarea {
-      cursor: text;
-    }
-
-    button, .button, input[type="submit"] {
-      cursor: pointer;
+      background: linear-gradient(135deg, #878baa, #be94a5, #878baa, rgb(163, 175, 140));
     }
 
     .container {
@@ -27,7 +18,6 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: linear-gradient(135deg, #878baa, #be94a5, #878baa, rgb(163, 175, 140));
     }
 
     .card {
@@ -37,6 +27,7 @@
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
       border-radius: 10px;
       overflow: hidden;
+      background-color: white;
     }
 
     .image-container {
@@ -47,11 +38,11 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
 
     .form-container {
       flex: 1;
-      background-color: white;
       padding: 40px;
       box-sizing: border-box;
     }
@@ -67,6 +58,7 @@
       margin: 10px 0;
       border: 1px solid #ccc;
       border-radius: 5px;
+      box-sizing: border-box;
     }
 
     .button {
@@ -76,6 +68,7 @@
       color: white;
       border: none;
       border-radius: 5px;
+      cursor: pointer;
       margin: 10px 0;
     }
 
@@ -115,6 +108,19 @@
         visibility: hidden;
       }
     }
+
+    /* Fix: prevent text cursor in non-input areas */
+    .form-container,
+    .card,
+    .container,
+    body {
+      user-select: none;
+    }
+
+    input, select, textarea, button {
+      user-select: auto;
+    }
+
   </style>
 </head>
 <body>
@@ -133,43 +139,3 @@
         {% endwith %}
 
         <h2>LOGIN</h2>
-        <form action="/login" method="POST" autocomplete="off">
-          {{ res.hidden_tag() }}
-
-          <!-- User Role Selection (with autofocus) -->
-          {{ res.userrole(class_="select", autofocus=True) }}<br><br>
-
-          <!-- Email Field -->
-          {{ res.email.label }}<br>
-          {{ res.email(class_="datafield", placeholder="Email Address") }}<br>
-          {% for error in res.email.errors %}
-            <span style="color:blue">{{ error }}</span><br>
-          {% endfor %}
-
-          <!-- Password Field -->
-          {{ res.password.label }}<br>
-          {{ res.password(class_="datafield", placeholder="Password") }}<br>
-          {% for error in res.password.errors %}
-            <span style="color:blue">{{ error }}</span><br>
-          {% endfor %}
-
-          <!-- Submit Button -->
-          {{ res.submit(class_="button") }}
-
-          <div class="link">
-            <p>Don't have an account? <a href="/register">Register here</a></p>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Optional JavaScript for consistent focus -->
-  <script>
-    window.onload = function () {
-      const firstInput = document.querySelector("select[name='userrole']");
-      if (firstInput) firstInput.focus();
-    };
-  </script>
-</body>
-</html>
