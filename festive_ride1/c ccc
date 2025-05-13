@@ -1,155 +1,238 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login Page</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #1e1e1e;
-    }
+app.py
+from flask import Flask, render_template, redirect, url_for, session, request, flash
+from flask_mysqldb import MySQL 
+from config import Config
+from form import LoginForm, RegisterForm, BookingForm
+from main import user_login_form, user_register_form, admin_login_form, admin_register_form, book_events, get_admin_data, get_user_data
+from flask_wtf.csrf import CSRFProtect
 
-    .container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #878baa, #be94a5, #878baa, rgb(163, 175, 140));
-    }
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    msg=""
 
-    .card {
-      display: flex;
-      width: 800px; /* Fixed width for consistency */
-      height: 450px; /* Fixed height for consistency */
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-      border-radius: 10px;
-      overflow: hidden; /* Ensures image and form fit perfectly */
-    }
+    if form.validate_on_submit():
+        role = form.userrole.data
+        email = form.email.data
+        password = form.password.data
 
-    .image-container {
-      flex: 1;
-    }
+        # Check user credentials
+        if role == 'user':
+            checkuser = user_login_form(role, email, password)
+            checkadmin = admin_login_form(role, email, password)
 
-    .image-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* ✨ Stretch image to fill container */
-    }
+            if checkuser == "Incorrect":
+                flash("Invalid credentials or incorrect password.")
+                return redirect(url_for('login'))
+            elif checkuser == "No Data":
+                flash("No user found. Please register.")
+                return redirect(url_for("register"))
+            elif checkadmin:
+                flash("Admin cannot login as user.")
+                return redirect(url_for("login"))
+            else:
+                # Session should be set here
+                session['username'] = checkuser
+                session.permanent = True  # Keeps session on page reload
+                flash("User login successful")
+                return redirect(url_for('index'))  # Redirect to a page after login
 
-    .form-container {
-      flex: 1;
-      background-color: white;
-      padding: 40px;
-      box-sizing: border-box;
-    }
+        elif role == 'admin':
+            checkuser = user_login_form(role, email, password)
+            checkadmin = admin_login_form(role, email, password)
 
-    h2 {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
+            if checkadmin == "Incorrect":
+                flash("Invalid credentials or incorrect password.")
+                return redirect(url_for('login'))
+            elif checkadmin == "No Data":
+                flash("No admin found. Please register.")
+                return redirect(url_for('register'))
+            elif checkuser:
+                flash("User cannot login as admin.")
+                return redirect(url_for('login'))
+            else:
+                # Session should be set here
+                session['username'] = checkadmin
+                session.permanent = True  # Keeps session on page reload
+                flash("Admin login successful")
+                return redirect(url_for('index'))  # Redirect to a page after login
 
-    .select, .datafield {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+    # If GET request or invalid POST (form not valid), reset fields only after POST
+    if request.method == 'GET':  # After refresh or page reload
+        form.email.data = ""
+        form.password.data = ""
 
-    .button {
-      width: 100%;
-      padding: 10px;
-      background-color: #4a55b8;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin: 10px 0;
-    }
+    return render_template("login.html", res=form)
 
-    .button:hover {
-      background-color: #3a4474;
-    }
+main.py
 
-    .link {
-      text-align: center;
-      margin-top: 1rem;
-    }
+import re
+import MySQLdb.cursors
 
-    .link a {
-      color: #007BFF;
-      text-decoration: none;
-    }
+def validate_details(email, name, password):
+   if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+",email):
+       return 1
+   if not re.fullmatch(r"^([A-Z][a-z]+)( [A-Z][a-z]+){1,2}$",name) and len(name)>100:
+       return 2
+   if (len(password)<8 or len(password) > 20 or not re.search(r"[@#$%&_]",password) or
+       not re.search(r"[A-Z]",password) or
+       not re.search(r"[a-z]",password) or
+       not re.search(r"[0-9]",password)):
+       return 3
+   return 0
 
-    .link a:hover {
-      text-decoration: underline;
-    }
+    
+def get_user_data(name):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor(MySQLdb.cursors.DictCursor)
+   cur.execute("select name,email from user_details where name=%s",(name,))
+   res=cur.fetchone()
+   cur.close()
+   if res:
+      return res
+   else:
+      return None  
 
-    .flash-message {
-      margin: 10px auto;
-      padding: 10px 20px;
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-      border-radius: 5px;
-      text-align: center;
-      font-weight: bold;
-      animation: fadeOut 1s ease-out 2s forwards;
-    }
+def get_admin_data(name):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor(MySQLdb.cursors.DictCursor)
+   cur.execute("select name,email from admin_details where name=%s",(name,))
+   res=cur.fetchone()
+   cur.close()
+   if res:
+      return res
+   else:
+      return None     
 
-    @keyframes fadeOut {
-      to {
-        opacity: 0;
-        visibility: hidden;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card"> <!-- ✨ New wrapper to keep image and form equal and tight -->
-      <div class="image-container">
-         <img src="{{ url_for('static', filename='img/login.webp') }}" alt="Login Image">
-      </div>
-      <div class="form-container">
-        {% with messages=get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="flash-message">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+def user_login_form(userrole,email,password):
+   
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor()
+   cur.execute("select name,email,password from user_details where email=%s",(email,))
+   res=cur.fetchone()
+   cur.close()
+   if userrole=='user':
+        if res and res['password']==password:
+            print("user already exits.Login successfully")
+            return res['name']
+        elif res and res['password']!=password:
+            print("password is not correct")
+            return "Incorrect"
+        else:
+            print("No user found.First register yourself")      
+            return "No Data"
 
-        <h2>LOGIN</h2>
-        <form action="/login" method="POST" autocomplete="off">
-          {{ res.csrf_token }}
-          {{ res.hidden_tag() }}
+def user_register_form(userrole,name,gender,phone,email,password):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor()
+   cur.execute("select password from user_details where email=%s",(email,)) 
+   res=cur.fetchone()
+   if userrole=='user':
+      if res is None:
+        cur.execute("insert into user_details(name,gender,phone,email,password) values(%s,%s,%s,%s,%s)",(name,gender,phone,email,password))
+        con.commit()
+        cur.close()
+        print("User Registration successful")    
+        return 0
+      elif res:
+        print("User Already exists") 
+        return 1  
 
-          {{ res.userrole(class_="select") }}<br><br>
+def admin_login_form(userrole,email,password):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor()
+   cur.execute("select name,email,password from admin_details where email=%s",(email,))
+   res=cur.fetchone()
+   cur.close()
+   if userrole=='admin':
+      if res and res['password']==password:
+         print("Admin already exits.Login successfully")
+         return res['name']
+      elif res and res['password']!=password:
+         print("password is not correct")
+         return "Incorrect"
+      else:
+         print("No admin found.First register yourself")      
+         return "No Data"   
 
-          {{ res.email.label }}<br>
-          {{ res.email(class_="datafield", placeholder="User Name") }}<br>
-          {% for error in res.email.errors %}
-            <span style="color:blue">{{ error }}</span><br>
-          {% endfor %}
+ 
 
-          {{ res.password.label }}<br>
-          {{ res.password(class_="datafield", placeholder="Password") }}<br>
-          {% for error in res.password.errors %}
-            <span style="color:blue">{{ error }}</span><br>
-          {% endfor %}
+def admin_register_form(userrole,name,gender,phone,email,password):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor()
+   cur.execute("select password from admin_details where email=%s",(email,)) 
+   res=cur.fetchone()
+   if userrole=='admin':
+      if res is None:
+        cur.execute("insert into admin_details(name,gender,phone,email,password) values(%s,%s,%s,%s,%s)",(name,gender,phone,email,password))
+        con.commit()
+        cur.close()
+        print(" Admin Registration successful")    
+        return 0
+      else:
+        print("Admin Already exists")     
+        return 1
+         
 
-          {{ res.submit(class_="button") }}
+def book_events(date,starttime,endtime,location):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor()
+   cur.execute("Select * from booking_details where starttime=%s and endtime=%s",(starttime,endtime))
+   res=cur.fetchone()
+   if res is None:
+      cur.execute("Insert into booking_details (date,starttime,endtime,location) values(%s,%s,%s,%s)",(date,starttime,endtime,location))
+      con.commit()
+      cur.close()
+      print("Booking successfully.Inserted in table")
+      return 0
+   else:
+      print("Already book.Book another slot")
+      return 1
 
-          <div class="link">
-            <p>Don't have an account? <a href="/register">Register here</a></p>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</body>
-</html>
+table.sql
+drop database if exists `mydb`;
+create database `mydb`;
+use `mydb`;
+
+drop table if exists `user_details`;
+create table `user_details`(
+   id int primary key auto_increment,
+   name varchar(50) not null,
+   gender varchar(10) not null,
+   phone int not null unique,
+   email varchar(100) unique not null,
+   password varchar(100) not null
+)Engine=InnoDB;
+
+
+
+drop table if exists `admin_details`;
+create table `admin_details`(
+   id int primary key auto_increment,
+   name varchar(50) not null,
+   gender varchar(10) not null,
+   phone int unique not null,
+   email varchar(50) unique not null,
+   password varchar(50) not null
+)Engine=InnoDB;
+
+
+drop table if exists `booking_details`;
+create table `booking_details`(
+   id int primary key auto_increment,
+   date date not null,
+   starttime time not null,
+   endtime time not null,
+   location varchar(200) not null
+)Engine=InnoDB;
+
+
+
+   
