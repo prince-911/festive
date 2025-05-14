@@ -1,217 +1,119 @@
-app.py
-from flask import Flask, render_template, redirect, url_for, session, request, flash
-from flask_mysqldb import MySQL 
-from config import Config
-from form import LoginForm, RegisterForm, BookingForm
-from main import user_login_form, user_register_form, admin_login_form, admin_register_form, book_events, get_admin_data, get_user_data
-from flask_wtf.csrf import CSRFProtect
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InfyMe Style Layout</title>
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    res = RegisterForm()
-    if res.validate_on_submit():
-        role = res.userrole.data
-        name = res.name.data
-        gender = res.gender.data
-        phone = res.phone.data
-        email = res.email.data
-        password = res.password.data
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-        if role == 'user':
-            checkuser = user_register_form(role, name, gender, phone, email, password)
-            checkadmin = admin_register_form(role, name, gender, phone, email, password)
-            if checkuser == 0:
-                flash("User registered successfully")
-                return redirect(url_for('login'))
-            elif checkuser == 1:
-                flash("User already exists")
-                return redirect(url_for('login'))
-            elif checkadmin:
-                flash("Error: Admin credentials cannot be used as user")
-                return redirect(url_for('register'))
-        elif role == 'admin':
-            checkadmin = admin_register_form(role, name, gender, phone, email, password)
-            checkuser = user_register_form(role, name, gender, phone, email, password)
-            if checkadmin == 0:
-                flash("Admin registered successfully")
-                return redirect(url_for('login'))
-            elif checkadmin == 1:
-                flash("Admin already exists")
-                return redirect(url_for('login'))
-            elif checkuser:
-                flash("Error: User credentials cannot be used as Admin")
-                return redirect(url_for('register'))
-    return render_template('register.html', res=res)
+  <style>
+    .navbar {
+      background-color: #8626c3;
+      color: white;
+    }
+    .profile-circle {
+      background-color: white;
+      color: #8626c3;
+      font-weight: bold;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      padding: 5px 12px;
+    }
+    .btn:hover {
+      background-color: #e2e6ea;
+    }
 
-main.py
+    .btn-danger:hover {
+        background-color: #c82333 !important;
+        color: white !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+      
+  </style>
+</head>
+<body>
 
-import re
-import MySQLdb.cursors
+<!-- Header -->
+<header class="navbar">
+  <div class="container-fluid py-3 px-4 d-flex align-items-center justify-content-between">
+    <!-- Logo and Title -->
+    <div class="d-flex align-items-center gap-3">
+      <!-- Hamburger button to trigger offcanvas -->
+      <button class="btn btn-light p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu" aria-controls="sideMenu">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h4 class="mb-0">Sky<span class="text-warning">Rider</span></h4>
+    </div>
 
-def validate_details(email, name, password):
-   if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+",email):
-       return 1
-   if not re.fullmatch(r"^([A-Z][a-z]+)( [A-Z][a-z]+){1,2}$",name) and len(name)>100:
-       return 2
-   if (len(password)<8 or len(password) > 20 or not re.search(r"[@#$%&_]",password) or
-       not re.search(r"[A-Z]",password) or
-       not re.search(r"[a-z]",password) or
-       not re.search(r"[0-9]",password)):
-       return 3
-   return 0
+    <!-- Search Bar -->
+    <div class="mx-4" style="width: 400px;">
+      <div class="input-group">
+        <input type="text" class="form-control" placeholder="Search for apps, policies, people and more">
+        <button class="btn bg-white" type="button">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
 
-    
-def get_user_data(name):
-   from app import mysql
-   con=mysql.connect
-   cur=con.cursor(MySQLdb.cursors.DictCursor)
-   cur.execute("select name,email from user_details where name=%s",(name,))
-   res=cur.fetchone()
-   cur.close()
-   if res:
-      return res
-   else:
-      return None  
+    <!-- Icons and Profile -->
+    <div class="d-flex align-items-center gap-3">
+      <i class="fas fa-question-circle fs-5"></i>
+      <i class="fas fa-bell fs-5"></i>
+      <div class="profile-circle">PK</div>
+    </div>
+  </div>
+</header>
 
-def get_admin_data(name):
-   from app import mysql
-   con=mysql.connect
-   cur=con.cursor(MySQLdb.cursors.DictCursor)
-   cur.execute("select name,email from admin_details where name=%s",(name,))
-   res=cur.fetchone()
-   cur.close()
-   if res:
-      return res
-   else:
-      return None     
+<!-- Offcanvas Side Menu -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu" aria-labelledby="sideMenuLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="sideMenuLabel">Menu</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column justify-content-between">
+    <div class="d-grid gap-2">
+      <button class="btn btn-light text-start"><i class="fas fa-user me-2"></i>Me</button>
+      <button class="btn btn-light text-start"><i class="fas fa-briefcase me-2"></i>Work</button>
+      <button class="btn btn-light text-start"><i class="fas fa-globe me-2"></i>World of Infosys</button>
+      <button class="btn btn-light text-start"><i class="fas fa-life-ring me-2"></i>Support</button>
+      <button class="btn btn-light text-start"><i class="fas fa-book-reader me-2"></i>Learning and Career</button>
+      <hr>
+      <button class="btn btn-light text-start"><i class="fas fa-chalkboard-teacher me-2"></i>Lex</button>
+      <button class="btn btn-light text-start"><i class="fas fa-stethoscope me-2"></i>MediBuddy</button>
+      <button class="btn btn-light text-start"><i class="fas fa-gift me-2"></i>SkyGold+</button>
+    </div>
+  
+    <!-- Logout Button (Bottom, Red, No Border Radius) -->
+    <div class="text-center mt-4">
+        <button class="btn btn-danger w-100 rounded-0">
+            <i class="fas fa-sign-out-alt me-2"></i>Logout
+          </button>
+          
+    </div>
+  </div>  
+</div>
 
-def user_login_form(userrole,email,password):
-   
-   from app import mysql
-   con=mysql.connect
-   cur=con.cursor()
-   cur.execute("select name,email,password from user_details where email=%s",(email,))
-   res=cur.fetchone()
-   cur.close()
-   if userrole=='user':
-        if res and res['password']==password:
-            print("user already exits.Login successfully")
-            return res['name']
-        elif res and res['password']!=password:
-            print("password is not correct")
-            return "Incorrect"
-        else:
-            print("No user found.First register yourself")      
-            return "No Data"
+<!-- Main Content Placeholder -->
+<main class="container my-5">
+  <p class="text-center text-muted">[Main content goes here]</p>
+</main>
 
-def user_register_form(userrole,name,gender,phone,email,password):
-   from app import mysql
-   con=mysql.connect
-   cur=con.cursor()
-   cur.execute("select password from user_details where email=%s",(email,)) 
-   res=cur.fetchone()
-   if userrole=='user':
-      if res is None:
-        cur.execute("insert into user_details(name,gender,phone,email,password) values(%s,%s,%s,%s,%s)",(name,gender,phone,email,password))
-        con.commit()
-        cur.close()
-        print("User Registration successful")    
-        return 0
-      elif res:
-        print("User Already exists") 
-        return 1  
+<!-- Footer -->
+<footer class="bg-dark text-light py-3 border-top">
+  <div class="container d-flex justify-content-between align-items-center">
+    <div>&copy; 2025 Sky Rider Limited</div>
+    <div><a href="#" class="text-light text-decoration-none">Terms and Conditions</a></div>
+  </div>
+</footer>
 
-def admin_login_form(userrole,email,password):
-   from app import mysql
-   con=mysql.connect
-   cur=con.cursor()
-   cur.execute("select name,email,password from admin_details where email=%s",(email,))
-   res=cur.fetchone()
-   cur.close()
-   if userrole=='admin':
-      if res and res['password']==password:
-         print("Admin already exits.Login successfully")
-         return res['name']
-      elif res and res['password']!=password:
-         print("password is not correct")
-         return "Incorrect"
-      else:
-         print("No admin found.First register yourself")      
-         return "No Data"   
-
- 
-
-def admin_register_form(userrole,name,gender,phone,email,password):
-   from app import mysql
-   con=mysql.connect
-   cur=con.cursor()
-   cur.execute("select password from admin_details where email=%s",(email,)) 
-   res=cur.fetchone()
-   if userrole=='admin':
-      if res is None:
-        cur.execute("insert into admin_details(name,gender,phone,email,password) values(%s,%s,%s,%s,%s)",(name,gender,phone,email,password))
-        con.commit()
-        cur.close()
-        print(" Admin Registration successful")    
-        return 0
-      else:
-        print("Admin Already exists")     
-        return 1
-         
-
-def book_events(date,starttime,endtime,location):
-   from app import mysql
-   con=mysql.connect
-   cur=con.cursor()
-   cur.execute("Select * from booking_details where starttime=%s and endtime=%s",(starttime,endtime))
-   res=cur.fetchone()
-   if res is None:
-      cur.execute("Insert into booking_details (date,starttime,endtime,location) values(%s,%s,%s,%s)",(date,starttime,endtime,location))
-      con.commit()
-      cur.close()
-      print("Booking successfully.Inserted in table")
-      return 0
-   else:
-      print("Already book.Book another slot")
-      return 1
-
-table.sql
-drop database if exists `mydb`;
-create database `mydb`;
-use `mydb`;
-
-drop table if exists `user_details`;
-create table `user_details`(
-   id int primary key auto_increment,
-   name varchar(50) not null,
-   gender varchar(10) not null,
-   phone int not null unique,
-   email varchar(100) unique not null,
-   password varchar(100) not null
-)Engine=InnoDB;
-
-
-
-drop table if exists `admin_details`;
-create table `admin_details`(
-   id int primary key auto_increment,
-   name varchar(50) not null,
-   gender varchar(10) not null,
-   phone int unique not null,
-   email varchar(50) unique not null,
-   password varchar(50) not null
-)Engine=InnoDB;
-
-
-drop table if exists `booking_details`;
-create table `booking_details`(
-   id int primary key auto_increment,
-   date date not null,
-   starttime time not null,
-   endtime time not null,
-   location varchar(200) not null
-)Engine=InnoDB;
-
-
-
-   
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
