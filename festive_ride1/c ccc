@@ -1,55 +1,420 @@
+app.py
+
+from flask import Flask,render_template,redirect,url_for,session,request,flash
+from flask_mysqldb import MySQL 
+from config import Config
+from form import LoginForm,RegisterForm,BookingForm
+from main import user_login_form,user_register_form,admin_login_form,admin_register_form,book_events,get_admin_data,get_user_data
+from flask_wtf.csrf import CSRFProtect
+
+
+
+
+app = Flask(__name__)
+app.secret_key="your_secret_key_here"
+csrf=CSRFProtect(app)
+app.config.from_object(Config)
+mysql = MySQL(app)
+
+
+@app.route('/')
+def home():
+   return render_template('home.html')
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin_dashboard():
+    if session.get('role') != 'admin':
+        flash("You are not authorized to view this page", "danger")
+        return redirect(url_for('index'))
+    
+    from app import mysql
+    con = mysql.connect
+    cur = con.cursor()
+    search_query = request.args.get('search', '')
+    user_query = "SELECT id, name, email,gender,phone FROM user_details WHERE 1=1"
+    params = []
+    if search_query:
+        user_query += " AND name LIKE %s"
+        params.append(f"%{search_query}%")
+    cur.execute(user_query, params)
+    users = cur.fetchall()
+    cur.execute("SELECT id, date, starttime, endtime, location,price,theme_name FROM booking_details1")
+    bookings = cur.fetchall()
+    cur.close()
+    return render_template("admin.html", users=users, bookings=bookings,search_query=search_query)
+
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    try:
+        from app import mysql
+        con = mysql.connect
+        cur = con.cursor()
+        print(f"Attempting to delete user with ID: {user_id}")  # Debug log
+        cur.execute("DELETE FROM user_details WHERE id=%s", (user_id,))
+        con.commit()
+        print(f"User with ID {user_id} deleted successfully.")  # Debug log
+        flash("User deleted successfully.", "success")
+        return redirect(url_for('admin_dashboard'))
+    except Exception as e:
+        print(f"Error occurred: {e}")  # Debug log
+        flash("Error deleting user.", "danger")
+        return redirect(url_for('admin_dashboard'))
+
+
+
+@app.route('/index')
+def index():
+    if 'username' in session:
+       username=session['username']
+       user_data=get_user_data(username)
+       admin_data=get_admin_data(username)
+
+       if user_data :
+         return render_template('index.html',user=user_data)
+       elif admin_data:
+          return render_template('index.html',user=admin_data)
+       else:
+          flash('User not found')
+          return redirect(url_for('login'))
+    else:
+       flash("Please log in first")
+       return redirect(url_for('login'))
+    
+@app.route('/cartheme', methods=['POST', 'GET'])
+def cartheme():
+    
+    rides = [
+        {
+            'title': 'Racing Car',
+            'image': 'img/classy_car.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': '$120/day'
+        },
+        {
+            'title': 'Tour Car',
+            'image': 'img/tour_car.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': '$100/day'
+        },
+        {
+            'title': 'Marriage',
+            'image': 'img/wedding_car.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': '$150/day'
+        },
+        {
+            'title': 'Halloween Theme',
+            'image': 'img/hallocar.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': '$130/day'
+        }
+    ]
+    return render_template('carthemes.html', rides=rides)
+
+
+@app.route('/birthdaytheme', methods=['POST', 'GET'])
+def birthdaytheme():
+    birthday_themes = [
+        {
+            'title': "31st Birthday",
+            'image': 'img/decorate_birthday.jpg',
+            'description': 'Aging like fine wine (or maybe just regular wine, either way!)',
+            'price': '$90/day'
+        },
+        {
+            'title': 'Cake Cutting',
+            'image': 'img/cakecutting.jpg',
+            'description': 'Survived another year! Time for cake. Just click on book now.',
+            'price': '$70/day'
+        },
+        {
+            'title': 'Child Theme',
+            'image': 'img/childbirthday.jpg',
+            'description': "Don't count the candles, makes them wish! Just click on book now.",
+            'price': '$100/day'
+        }
+    ]
+    return render_template('birthdaythemes.html', birthday_themes=birthday_themes)
+
+
+@app.route('/resturanttheme', methods=['POST', 'GET'])
+def resturanttheme():
+    resturant_themes = [
+        {
+            'title': 'Restaurant',
+            'image': 'img/resturant_booking.jpg',
+            'description': 'Dinner Date secured! Just click on book now.',
+            'price': '$60/table'
+        },
+        {
+            'title': 'Meet Up',
+            'image': 'img/resturant1.webp',
+            'description': 'The countdown begins! Just click on book now.',
+            'price': '$50/table'
+        },
+        {
+            'title': 'For Treat',
+            'image': 'img/resturant2.webp',
+            'description': 'Setting the scene for a great meal. Just click on book now.',
+            'price': '$70/table'
+        }
+    ]
+    return render_template('resturantthemes.html', resturant_themes=resturant_themes)
+
+
+@app.route('/showtheme', methods=['POST', 'GET'])
+def showtheme():
+    show_themes = [
+        {
+            'title': 'Holi',
+            'image': 'img/holi.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': '$80/show'
+        },
+        {
+            'title': 'Dandiya',
+            'image': 'img/dandiya.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': '$100/show'
+        },
+        {
+            'title': 'Halloween',
+            'image': 'img/hallowen.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': '$120/show'
+        },
+        {
+            'title': 'Circus Show',
+            'image': 'img/circus.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': '$90/show'
+        },
+        {
+            'title': 'Magic Show',
+            'image': 'img/magic_show.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': '$110/show'
+        }
+    ]
+    return render_template('showthemes.html', show_themes=show_themes)
+
+   
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if 'fail_count' not in session:
+        session['fail_count'] = 0
+
     res = RegisterForm()
+    print("form submitted:", res.validate_on_submit())
+    
+    if request.method=='POST' and res.validate_on_submit():
+        role = res.userrole.data
+        name = res.name.data
+        gender = res.gender.data
+        phone = res.phone.data
+        email = res.email.data
+        password = res.password.data
 
-    if request.method=='POST':
-        if res.validate_on_submit():
+        if role == 'user':
+            checkuser = user_register_form(role, name, gender, phone, email, password)
+            checkadmin = admin_register_form(role, name, gender, phone, email, password)
+            if checkuser == 0:
+                flash("User Register successfully")
+                session['fail_count'] = 0  # Reset fail count on success
+                return redirect(url_for('login'))  # Redirect to login after success
+            elif checkuser == 1:
+                flash("User Exists Already")
+                session['fail_count'] += 1  # Increment fail count
+            elif checkadmin:
+                flash("Error: Admin credentials cannot be used as user")
+                session['fail_count'] += 1  # Increment fail count
+            else:
+                flash("Registration failed. Please fix the errors and try again")
+                session['fail_count'] += 1  # Increment fail count
 
-            role = res.userrole.data
-            name = res.name.data
-            gender = res.gender.data
-            phone = res.phone.data
-            email = res.email.data
-            password = res.password.data
+        elif role == 'admin':
+            checkadmin = admin_register_form(role, name, gender, phone, email, password)
+            checkuser = user_register_form(role, name, gender, phone, email, password)
+            if checkadmin == 0:
+                flash("Admin Register Successful")
+                session['fail_count'] = 0  # Reset fail count on success
+                return redirect(url_for('login'))  # Redirect to login after success
+            elif checkadmin == 1:
+                flash("Admin Exists Already")
+                session['fail_count'] += 1  # Increment fail count
+            elif checkuser:
+                flash("Error: User credentials cannot be used as Admin")
+                session['fail_count'] += 1  # Increment fail count
+            else:
+                flash('Registration failed. Please fix the errors and try again')
+                session['fail_count'] += 1  # Increment fail count
 
-            if role == 'user':
-                checkuser = user_register_form(role, name, gender, phone, email, password)
-                checkadmin = admin_register_form(role, name, gender, phone, email, password)
-                if checkuser == 0:
-                    flash("User registered successfully")
-                    return redirect(url_for('login'))
-                elif checkuser == 1:
-                    flash("User already exists")
-                    return redirect(url_for('login'))
-                elif checkadmin:
-                    flash("Error: Admin credentials cannot be used as user")
-                    return redirect(url_for('register'))
-            elif role == 'admin':
-                checkadmin = admin_register_form(role, name, gender, phone, email, password)
-                checkuser = user_register_form(role, name, gender, phone, email, password)
-                if checkadmin == 0:
-                    flash("Admin registered successfully")
-                    return redirect(url_for('login'))
-                elif checkadmin == 1:
-                    flash("Admin already exists")
-                    return redirect(url_for('login'))
-                elif checkuser:
-                    flash("Error: User credentials cannot be used as Admin")
-                    return redirect(url_for('register'))
-                
-        res.name.data=""
-        res.gender.data=""
-        res.phone.data=""
-        res.email.data=""
-        res.password.data=""
-
-    elif request.method=='GET':
-        #clear form on reload
-        res.name.data=""
-        res.gender.data=""
-        res.phone.data=""
-        res.email.data=""
-        res.password.data=""
-        res=RegisterForm()
+        # If fail count reaches 3 or more, reset and refresh the page
+        if session['fail_count'] >= 3:
+            session['fail_count'] = 0  # Reset fail count
+            return redirect(url_for('register'))  # Redirect to register page after 3 failed attempts
+    
     return render_template('register.html', res=res)
+
+@app.route('/login',methods=['GET','POST'])
+def login():
+   res=LoginForm()
+   print("form submitted:",res.validate_on_submit())
+   if res.validate_on_submit():
+       role=res.userrole.data
+       email=res.email.data
+       password=res.password.data
+       print('Form submitted successfully')
+       print(f'role is:{role}')
+       
+       if role == 'user':
+          checkuser=user_login_form(role,email,password)
+          checkadmin=admin_login_form(role,email,password)
+          print(f"user_login return:{checkuser}")
+          if checkuser == "Incorrect":
+             flash("Invalid Credential or incorrect password.Please try again")
+             return redirect(url_for('login'))
+          elif checkuser == "No Data":
+             flash("No user found.Please register yourself")
+             return redirect(url_for("register"))
+          elif checkadmin:  
+            flash("Error: Admin cannot login as user")
+            return redirect(url_for("login"))  
+          else:
+            session['username']=checkuser
+            session['role'] = 'user' 
+            print(session['username'])
+            flash("User Login Successful")
+            return render_template("message.html") 
+      
+                 
+          
+       elif role=='admin':
+          checkuser=user_login_form(role,email,password)
+          checkadmin=admin_login_form(role,email,password)
+          print(f"user_login return:{checkadmin}")
+            
+          if checkadmin == "Incorrect":
+             flash("Invalid Credential or incorrect password.Please try again")
+             return redirect(url_for('login'))
+          elif checkadmin == "No Data":
+             flash("No Admin found.Please register yourself")
+             return redirect(url_for("register"))
+          elif checkuser:
+             flash("Error:User cannot login as Admin")
+             return redirect(url_for('login'))
+          else:
+            session['username']=checkadmin
+            session['role'] = 'admin' 
+            print(session['username'])
+            flash("Admin Login successful")
+            return render_template("adminmsg.html")
+   return render_template('login.html',res=res)
+
+@app.route('/booking', methods=['GET', 'POST'])
+def booking():
+    res = BookingForm()
+
+    # ✅ Always get theme from query string first
+    theme_name = request.args.get('theme_name') or session.get('theme_name')
+
+    # ✅ Store theme in session (to preserve it on POST)
+    if theme_name:
+        session['theme_name'] = theme_name
+        res.theme_name.data = theme_name
+    elif request.method == 'POST':
+        theme_name = res.theme_name.data    
+     
+
+    # ✅ Static price lookup based on theme_name
+    prices = {
+        'Racing Car': 120,
+        'Tour Car': 100,
+        'Marriage': 150,
+        'Halloween Theme': 130,
+        '31st Birthday': 90,
+        'Cake Cutting': 70,
+        'Child Theme':100,
+        'Restaurant':60,
+        'Meet Up':50,
+        'For Treat':70,
+        'Holi': 80,
+        'Dandiya': 100,
+        'Halloween': 120,
+        'Circus Show':90,
+        'Magic Show':110
+   
+    }
+
+    if request.method == 'POST' and res.validate_on_submit():
+        date = res.date.data
+        starttime = res.starttime.data
+        endtime = res.endtime.data
+        location = res.location.data
+        theme_name=res.theme_name.data
+
+        price = prices.get(theme_name, 0) 
+
+        if not theme_name or price == 0:
+            flash("Invalid theme selected.Please try again")
+            return redirect(url_for("booking"))
+
+        # Check slot availability
+        booking_status = book_events(date, starttime, endtime, location)
+        print(f"Booking Status return: {booking_status}")
+        print(f"Theme: {theme_name}, Price: {price}")
+
+        if booking_status == 0:
+            conn = mysql.connect
+            cursor = conn.cursor()
+            insert_query = """
+                INSERT INTO booking_details1 (date, starttime, endtime, location, price, theme_name)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(insert_query, (
+                date, starttime, endtime, location, price, theme_name
+            ))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            # ✅ Clear theme from session after booking
+            session.pop('theme_name', None)
+            flash("Booking Successfully")
+            return render_template('bookingmsg.html')
+        elif booking_status == 1:
+            flash("Already booked. Choose another slot")
+            return redirect(url_for("booking"))
+        else:
+            return redirect(url_for("booking"))
+
+    return render_template('booking.html', res=res, theme_name=theme_name, price=prices)
+
+
+
+
+@app.route('/logout')
+def logout():
+    session.clear()  # Clear the session
+    flash("Logged out successfully.", "success")
+    return redirect(url_for('login'))                
+
+
+if __name__=='__main__':
+  app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
