@@ -1,4 +1,532 @@
-app.py
+from flask import Flask,render_template,redirect,url_for,session,request,flash # type: ignore
+from flask_mysqldb import MySQL  # type: ignore
+from config import Config
+from form import LoginForm,RegisterForm,BookingForm,PaymentForm
+from main import user_login_form,user_register_form,admin_login_form,admin_register_form,book_events,get_admin_data,get_user_data,get_all_users, get_all_bookings, delete_user_by_id,get_user_booking_count
+from flask_wtf.csrf import CSRFProtect # type: ignore
+from functools import wraps
+from flask import make_response
+
+app = Flask(__name__)
+app.secret_key="your_secret_key_here"
+csrf=CSRFProtect(app)
+app.config.from_object(Config)
+mysql = MySQL(app)
+
+def no_cache(view):
+    @wraps(view)
+    def no_cache_view(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
+    return no_cache_view
+
+@app.route('/')
+def home():
+   return render_template('home.html') 
+
+@app.route('/admin', methods=['GET'])
+@no_cache
+def admin_dashboard():
+    if session.get('role') != 'admin':
+        flash("You are not authorized to view this page", "danger")
+        return redirect(url_for('index'))
+
+    search_query = request.args.get('search', '').strip()
+    users = get_all_users(search_query)
+    bookings = get_all_bookings()
+
+    return render_template("admin.html", users=users, bookings=bookings, search_query=search_query)
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    try:
+        print(f"Attempting to delete user with ID: {user_id}")
+        delete_user_by_id(user_id)
+        print(f"User with ID {user_id} deleted successfully.")
+        flash("User deleted successfully.", "success")
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        flash("Error deleting user.", "danger")
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/index')
+@no_cache
+def index():
+
+    if 'username' in session:
+       username=session['username']
+       user_data=get_user_data(username)
+       admin_data=get_admin_data(username)
+
+       booking_count = get_user_booking_count(username)
+
+
+    
+       if user_data :
+         return render_template('index.html',user=user_data,booking_count=booking_count)
+       elif admin_data:
+          return render_template('index.html',user=admin_data,booking_count=booking_count)
+       else:
+          flash('User not found')
+          return redirect(url_for('login'))
+    else:
+       flash("Please log in first")
+       return redirect(url_for('login'))
+    
+@app.route('/cartheme', methods=['POST', 'GET'])
+def cartheme():
+    
+    rides = [
+        {
+            'title': 'Racing Car',
+            'image': 'img/classy_car.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 120/day'
+        },
+        {
+            'title': 'Tour Car',
+            'image': 'img/tour_car.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 100/day'
+        },
+        {
+            'title': 'Marriage',
+            'image': 'img/wedding_car.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 150/day'
+        },
+        {
+            'title': 'Halloween Theme',
+            'image': 'img/hallocar.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 130/day'
+        }
+    ]
+    return render_template('carthemes.html', rides=rides)
+
+@app.route('/birthdaytheme', methods=['POST', 'GET'])
+def birthdaytheme():
+    birthday_themes = [
+        {
+            'title': "31st Birthday",
+            'image': 'img/decorate_birthday.jpg',
+            'description': 'Aging like fine wine (or maybe just regular wine, either way!)',
+            'price': 'Rs 90/day'
+        },
+        {
+            'title': 'Cake Cutting',
+            'image': 'img/cakecutting.jpg',
+            'description': 'Survived another year! Time for cake. Just click on book now.',
+            'price': 'Rs 70/day'
+        },
+        {
+            'title': 'Child Theme',
+            'image': 'img/childbirthday.jpg',
+            'description': "Don't count the candles, makes them wish! Just click on book now.",
+            'price': 'Rs 100/day'
+        }
+    ]
+    return render_template('birthdaythemes.html', birthday_themes=birthday_themes)
+
+@app.route('/resturanttheme', methods=['POST', 'GET'])
+def resturanttheme():
+    resturant_themes = [
+        {
+            'title': 'Restaurant',
+            'image': 'img/resturant_booking.jpg',
+            'description': 'Dinner Date secured! Just click on book now.',
+            'price': 'Rs 60/table'
+        },
+        {
+            'title': 'Meet Up',
+            'image': 'img/resturant1.webp',
+            'description': 'The countdown begins! Just click on book now.',
+            'price': 'Rs 50/table'
+        },
+        {
+            'title': 'For Treat',
+            'image': 'img/resturant2.webp',
+            'description': 'Setting the scene for a great meal. Just click on book now.',
+            'price': 'Rs 70/table'
+        }
+    ]
+    return render_template('resturantthemes.html', resturant_themes=resturant_themes)
+
+@app.route('/showtheme', methods=['POST', 'GET'])
+def showtheme():
+    show_themes = [
+        {
+            'title': 'Holi',
+            'image': 'img/holi.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 80/show'
+        },
+        {
+            'title': 'Dandiya',
+            'image': 'img/dandiya.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 100/show'
+        },
+        {
+            'title': 'Halloween',
+            'image': 'img/hallowen.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 120/show'
+        },
+        {
+            'title': 'Circus Show',
+            'image': 'img/circus.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 90/show'
+        },
+        {
+            'title': 'Magic Show',
+            'image': 'img/magic_show.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 110/show'
+        }
+    ]
+    return render_template('showthemes.html', show_themes=show_themes)
+
+   
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    res = RegisterForm()
+    print("form submitted:", res.validate_on_submit())
+    
+    if request.method=='POST' and res.validate_on_submit():
+        role = res.userrole.data
+        name = res.name.data
+        gender = res.gender.data
+        phone = res.phone.data
+        email = res.email.data
+        password = res.password.data
+
+        if role == 'user':
+            checkuser = user_register_form(role, name, gender, phone, email, password)
+            checkadmin = admin_register_form(role, name, gender, phone, email, password)
+            if checkuser == 0:
+                flash("User Register successfully")
+                return redirect(url_for('login'))  # Redirect to login after success
+            elif checkuser == 1:
+                flash("User Exists Already")
+            elif checkadmin:
+                flash("Error: Admin credentials cannot be used as user")
+                return redirect(url_for('register'))
+            else:
+                flash("Registration failed. Please fix the errors and try again")
+
+        elif role == 'admin':
+            checkadmin = admin_register_form(role, name, gender, phone, email, password)
+            checkuser = user_register_form(role, name, gender, phone, email, password)
+            if checkadmin == 0:
+                flash("Admin Register Successful")
+                return redirect(url_for('login'))  # Redirect to login after success
+            elif checkadmin == 1:
+                flash("Admin Exists Already")
+            elif checkuser:
+                flash("Error: User credentials cannot be used as Admin")
+            else:
+                flash('Registration failed. Please fix the errors and try again')
+    
+    return render_template('register.html', res=res)
+
+@app.route('/login',methods=['GET','POST'])
+def login():
+   res=LoginForm()
+   print("form submitted:",res.validate_on_submit())
+   if res.validate_on_submit():
+       role=res.userrole.data
+       email=res.email.data
+       password=res.password.data
+       print('Form submitted successfully')
+       print(f'role is:{role}')
+       
+       if role == 'user':
+          checkuser=user_login_form(role,email,password)
+          checkadmin=admin_login_form(role,email,password)
+          print(f"user_login return:{checkuser}")
+          if checkuser == "Incorrect":
+             flash("Invalid Credential or incorrect password.Please try again")
+             return redirect(url_for('login'))
+          elif checkuser == "No Data":
+             flash("No user found.Please register yourself")
+             return redirect(url_for("register"))
+          elif checkadmin:  
+            flash("Error: Admin cannot login as user")
+            return redirect(url_for("login"))  
+          else:
+            session['username']=checkuser
+            session['role'] = 'user' 
+            print(session['username'])
+            return redirect(url_for('index'))
+      
+                 
+          
+       elif role=='admin':
+          checkuser=user_login_form(role,email,password)
+          checkadmin=admin_login_form(role,email,password)
+          print(f"user_login return:{checkadmin}")
+            
+          if checkadmin == "Incorrect":
+             flash("Invalid Credential or incorrect password.Please try again")
+             return redirect(url_for('login'))
+          elif checkadmin == "No Data":
+             flash("No Admin found.Please register yourself")
+             return redirect(url_for("register"))
+          elif checkuser:
+             flash("Error:User cannot login as Admin")
+             return redirect(url_for('login'))
+          else:
+            session['username']=checkadmin
+            session['role'] = 'admin' 
+            print(session['username'])
+            flash("Admin Login successful")
+            return redirect(url_for('admin_dashboard'))
+   return render_template('login.html',res=res)
+
+@app.route('/booking', methods=['GET', 'POST'])
+@no_cache
+def booking():
+    if 'username' not in session:
+        flash("Please log in first")
+        return redirect(url_for('login'))
+
+    # Ensure theme is selected
+    theme_name = request.args.get('theme_name') or session.get('theme_name')
+    if not theme_name:
+        flash("Please select a theme first")
+        return redirect(url_for('index'))  
+
+    res = BookingForm()
+    session['theme_name'] = theme_name
+    res.theme_name.data = theme_name    
+
+    prices = {
+        'Racing Car': 120,
+        'Tour Car': 100,
+        'Marriage': 150,
+        'Halloween Theme': 130,
+        '31st Birthday': 90,
+        'Cake Cutting': 70,
+        'Child Theme':100,
+        'Restaurant':60,
+        'Meet Up':50,
+        'For Treat':70,
+        'Holi': 80,
+        'Dandiya': 100,
+        'Halloween': 120,
+        'Circus Show':90,
+        'Magic Show':110
+   
+    }
+
+    if request.method == 'POST' and res.validate_on_submit():
+        date = res.date.data
+        starttime = res.starttime.data
+        endtime = res.endtime.data
+        location = res.location.data
+        theme_name=res.theme_name.data
+
+        price = prices.get(theme_name, 0) 
+        if not theme_name or price == 0:
+            flash("Invalid theme selected.Please try again")
+            return redirect(url_for("booking"))
+
+        booking_status = book_events(date, starttime, endtime, location)
+        print(f"Booking Status return: {booking_status}")
+        print(f"Theme: {theme_name}, Price: {price}")
+        if booking_status == 0:
+            user_data = get_user_data(session['username'])
+            print("user_data:", user_data)
+
+            uid = user_data['uid']
+            conn = mysql.connect
+            cursor = conn.cursor()
+            insert_query = """
+                INSERT INTO booking_details1 (date, starttime, endtime, location, price, theme_name,uid)
+                VALUES (%s, %s, %s, %s, %s, %s,%s)
+            """
+            cursor.execute(insert_query, (
+                date, starttime, endtime, location, price, theme_name,uid
+            ))
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            session['payment_theme'] = theme_name
+            session['payment_price'] = price
+
+            session.pop('theme_name', None)
+            flash("Booking Successfully")
+            return redirect(url_for('payment'))
+        elif booking_status == 1:
+            flash("Already booked. Choose another slot")
+            return redirect(url_for("booking"))
+        else:
+            return redirect(url_for("booking"))
+
+    return render_template('booking.html', res=res, theme_name=theme_name, price=prices)
+
+@app.route('/payment', methods=['GET', 'POST'])
+@no_cache
+def payment():
+    if 'username' not in session:
+        flash("Please log in first")
+        return redirect(url_for('login'))
+
+    price = session.get('payment_price')
+    theme_name = session.get('payment_theme')
+
+    if not price or not theme_name:
+        flash("Please complete a booking first.")
+        return redirect(url_for('booking'))
+
+    form = PaymentForm() 
+    if form.validate_on_submit():
+        session.pop('payment_price', None)
+        session.pop('payment_theme', None)
+        session['payment_done'] = True  
+        return redirect(url_for('paysuccess'))
+
+    return render_template('payment.html', form=form, price=price, theme=theme_name)
+
+@app.route('/paysuccess', methods=['GET', 'POST'])
+@no_cache
+def paysuccess():
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+
+    if not session.get('payment_done'):
+        # flash("You are not authorized to access this page.")
+        return redirect(url_for('index'))
+
+    # Clear the flag so the user can’t revisit this page without paying again
+    session.pop('payment_done', None)
+
+    return render_template('paysuccess.html')
+
+# @app.route('/cart')
+# def cart():
+#     conn=mysql.connect
+#     cur=conn.cursor()
+#     user_data = get_user_data(session['username'])
+#     uid = user_data['uid']
+#     cur.execute("select * from booking_details where uid=%s",(uid,))
+
+@app.route('/cancel_booking/<int:booking_id>', methods=['POST'])
+def cancel_booking(booking_id):
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+
+    conn = mysql.connection
+    cur = conn.cursor()
+
+    try:
+        cur.execute("DELETE FROM booking_details1 WHERE bid = %s", (booking_id,))
+        conn.commit()
+        flash("Booking cancelled successfully.", "success")
+    except Exception as e:
+        flash("Error cancelling booking.", "danger")
+    finally:
+        cur.close()
+
+    return redirect(url_for('cart'))
+
+@app.route('/cart')
+@no_cache
+def cart():
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+
+    user_data = get_user_data(session['username'])
+    if not user_data:
+        flash("User data not found.")
+        return redirect(url_for('index'))
+
+    uid = user_data['uid']
+
+    conn = mysql.connection
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT * FROM booking_details1 WHERE uid = %s", (uid,))
+        bookings = cur.fetchall()
+    except Exception as e:
+        flash("Error fetching cart data.", "danger")
+        bookings = []
+    finally:
+        cur.close()
+
+    return render_template("cart.html", bookings=bookings)
+
+@app.route('/profile')
+@no_cache
+def profile():
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+
+    user_data = get_user_data(session['username'])
+    if not user_data:
+        flash("User data not found.")
+        return redirect(url_for('index'))
+
+    uid = user_data['uid']
+
+    conn = mysql.connection
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT * FROM user_details WHERE uid = %s", (uid,))
+        user_details = cur.fetchone()
+    except Exception as e:
+        flash("Error fetching cart data.", "danger")
+        user_details = []
+    finally:
+        cur.close()
+
+    return render_template("profile.html", user=user_details)
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+def edit_profile():
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+    
+    user_data = get_user_data(session['username'])
+    #print(user_data)
+    if not user_data:
+        flash("User not found.")
+        return redirect(url_for('profile'))
+
+    if request.method == 'POST':
+        name = request.form['name']
+        phone = request.form['phone']
+        gender = request.form['gender']
+
+        conn = mysql.connection
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE user_details 
+            SET name = %s, phone = %s, gender = %s 
+            WHERE uid = %s
+        """, (name, phone, gender, user_data['uid']))
+        conn.commit()
+        cur.close()
+        flash("Profile updated successfully.")
+        return redirect(url_for('profile'))
+
+    return render_template("edit_profile.html", user=user_data)
+
+
 @app.route('/support', methods=['GET', 'POST'])
 def support():
     if request.method == 'POST':
@@ -13,59 +541,15 @@ def support():
         cur.close()
 
         flash("Support message submitted successfully!", "success")
-        return redirect(url_for('support'))
+        return redirect(url_for('index'))
 
     return render_template('support.html')
-support.html
-<!-- templates/support.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Support - Festival Ride</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css">
-</head>
-<body>
 
-  <header class="p-3 bg-primary text-white text-center">
-    <h2>Support Center</h2>
-  </header>
+@app.route('/logout')
+def logout():
+    session.clear() 
+    flash("Logged out successfully.", "success")
+    return redirect(url_for('login'))                
 
-  <div class="container mt-4">
-    <h4>Need Help?</h4>
-    <p>If you have any issues or questions, feel free to contact us. We're here to help!</p>
-
-    <ul class="list-group">
-      <li class="list-group-item">📞 Customer Care: +91-1234567890</li>
-      <li class="list-group-item">📧 Email: support@festivalride.com</li>
-      <li class="list-group-item">🕐 Working Hours: 9 AM - 9 PM (All days)</li>
-    </ul>
-
-    <div class="mt-4">
-      <h5>Send us a message:</h5>
-      <form method="POST" action="{{ url_for('support') }}">
-        {{ csrf_token() }}
-        
-        <label for="email">Email:</label><br />
-        <input type="email" id="email" name="email" required /><br /><br />
-        
-        <label for="message">Message:</label><br />
-        <textarea id="message" name="message" rows="5" cols="30" required></textarea><br /><br />
-        
-        <button type="submit">Submit</button>
-      </form>
-    
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <ul>
-            {% for category, message in messages %}
-              <li class="{{ category }}">{{ message }}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
-      {% endwith %}
-    </body>
-    </html>
-data is not stored int he table please compile the code
-ChatGPT said:
+if __name__=='__main__':
+  app.run(debug=True)
