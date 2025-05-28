@@ -1,12 +1,30 @@
-@app.route('/admin', methods=['GET'])
-@no_cache
-def admin_dashboard():
-    if session.get('role') != 'admin':
-        flash("You are not authorized to view this page", "danger")
-        return redirect(url_for('index'))
+def get_all_users(search_query=None):
+    from app import mysql
+    con=mysql.connect
+    cur=con.cursor(MySQLdb.cursors.DictCursor)
+    if search_query:
+        cur.execute("SELECT uid, name, email, gender, phone FROM user_details WHERE name LIKE %s", (f"%{search_query}%",))
+    else:
+        cur.execute("SELECT uid, name, email, gender, phone FROM user_details")
+    users = cur.fetchall()
+    cur.close()
+    return users
 
-    search_query = request.args.get('search', '').strip()
-    users = get_all_users(search_query)
-    bookings = get_all_bookings()
+def get_all_bookings():
+    from app import mysql
+    con=mysql.connect
+    cur=con.cursor(MySQLdb.cursors.DictCursor)
+    cur.execute("SELECT bid, date, starttime, endtime, location, price, theme_name,uid FROM booking_details1")
+    print("hi booking details")
+    bookings = cur.fetchall()
+    cur.close()
+    return bookings
 
-    return render_template("admin.html", users=users, bookings=bookings, search_query=search_query)
+def delete_user_by_id(user_id):
+    from app import mysql
+    con=mysql.connect
+    cur=con.cursor(MySQLdb.cursors.DictCursor)
+    cur.execute("DELETE FROM user_details WHERE uid=%s", (user_id,))
+    mysql.connection.commit()
+    cur.close()
+    con.commit()
