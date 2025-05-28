@@ -1,12 +1,12 @@
-drop table if exists `booking_details1`;
-create table `booking_details1`(
-   bid int primary key auto_increment,
-   date date not null,
-   starttime time not null,
-   endtime time not null,
-   location varchar(200) not null,
-   price int not null,
-   theme_name varchar(100) not null,
-   uid int,
-   foreign key(uid) REFERENCES user_details(uid) on delete cascade
-)Engine=InnoDB;
+@app.route('/admin', methods=['GET'])
+@no_cache
+def admin_dashboard():
+    if session.get('role') != 'admin':
+        flash("You are not authorized to view this page", "danger")
+        return redirect(url_for('index'))
+
+    search_query = request.args.get('search', '').strip()
+    users = get_all_users(search_query)
+    bookings = get_all_bookings()
+
+    return render_template("admin.html", users=users, bookings=bookings, search_query=search_query)
