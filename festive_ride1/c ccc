@@ -1,3 +1,631 @@
+app.py
+
+from flask import Flask,render_template,redirect,url_for,session,request,flash # type: ignore
+from flask_mysqldb import MySQL  # type: ignore
+from config import Config
+from form import LoginForm,RegisterForm,BookingForm,PaymentForm,SupportForm
+from main import user_login_form,user_register_form,admin_login_form,admin_register_form,book_events,get_admin_data,get_user_data,get_all_users, get_all_bookings, delete_user_by_id,get_user_booking_count
+from flask_wtf.csrf import CSRFProtect # type: ignore
+from functools import wraps
+from flask import make_response
+
+app = Flask(__name__)
+app.secret_key="your_secret_key_here"
+csrf=CSRFProtect(app)
+app.config.from_object(Config)
+mysql = MySQL(app)
+
+def no_cache(view):
+    @wraps(view)
+    def no_cache_view(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
+    return no_cache_view
+
+@app.route('/')
+def home():
+   return render_template('home.html') 
+
+@app.route('/admin', methods=['GET'])
+@no_cache
+def admin_dashboard():
+    if session.get('role') != 'admin':
+        flash("You are not authorized to view this page", "danger")
+        return redirect(url_for('index'))
+
+    search_query = request.args.get('search', '').strip()
+    users = get_all_users(search_query)
+    bookings = get_all_bookings()
+
+    return render_template("admin.html", users=users, bookings=bookings, search_query=search_query)
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    try:
+        print(f"Attempting to delete user with ID: {user_id}")
+        delete_user_by_id(user_id)
+        print(f"User with ID {user_id} deleted successfully.")
+        flash("User deleted successfully.", "success")
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        flash("Error deleting user.", "danger")
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/index')
+@no_cache
+def index():
+
+    if 'username' in session:
+       username=session['username']
+       user_data=get_user_data(username)
+       admin_data=get_admin_data(username)
+
+       booking_count = get_user_booking_count(username)
+
+
+    
+       if user_data :
+         return render_template('index.html',user=user_data,booking_count=booking_count)
+       elif admin_data:
+          return render_template('index.html',user=admin_data,booking_count=booking_count)
+       else:
+          flash('User not found')
+          return redirect(url_for('login'))
+    else:
+       flash("Please log in first")
+       return redirect(url_for('login'))
+    
+@app.route('/cartheme', methods=['POST', 'GET'])
+def cartheme():
+    
+    rides = [
+        {
+            'title': 'Racing Car',
+            'image': 'img/classy_car.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 120/day'
+        },
+        {
+            'title': 'Tour Car',
+            'image': 'img/tour_car.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 100/day'
+        },
+        {
+            'title': 'Marriage',
+            'image': 'img/wedding_car.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 150/day'
+        },
+        {
+            'title': 'Halloween Theme',
+            'image': 'img/hallocar.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 130/day'
+        }
+    ]
+    return render_template('carthemes.html', rides=rides)
+
+@app.route('/birthdaytheme', methods=['POST', 'GET'])
+def birthdaytheme():
+    birthday_themes = [
+        {
+            'title': "31st Birthday",
+            'image': 'img/decorate_birthday.jpg',
+            'description': 'Aging like fine wine (or maybe just regular wine, either way!)',
+            'price': 'Rs 90/day'
+        },
+        {
+            'title': 'Cake Cutting',
+            'image': 'img/cakecutting.jpg',
+            'description': 'Survived another year! Time for cake. Just click on book now.',
+            'price': 'Rs 70/day'
+        },
+        {
+            'title': 'Child Theme',
+            'image': 'img/childbirthday.jpg',
+            'description': "Don't count the candles, makes them wish! Just click on book now.",
+            'price': 'Rs 100/day'
+        }
+    ]
+    return render_template('birthdaythemes.html', birthday_themes=birthday_themes)
+
+@app.route('/resturanttheme', methods=['POST', 'GET'])
+def resturanttheme():
+    resturant_themes = [
+        {
+            'title': 'Restaurant',
+            'image': 'img/resturant_booking.jpg',
+            'description': 'Dinner Date secured! Just click on book now.',
+            'price': 'Rs 60/table'
+        },
+        {
+            'title': 'Meet Up',
+            'image': 'img/resturant1.webp',
+            'description': 'The countdown begins! Just click on book now.',
+            'price': 'Rs 50/table'
+        },
+        {
+            'title': 'For Treat',
+            'image': 'img/resturant2.webp',
+            'description': 'Setting the scene for a great meal. Just click on book now.',
+            'price': 'Rs 70/table'
+        }
+    ]
+    return render_template('resturantthemes.html', resturant_themes=resturant_themes)
+
+@app.route('/showtheme', methods=['POST', 'GET'])
+def showtheme():
+    show_themes = [
+        {
+            'title': 'Holi',
+            'image': 'img/holi.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 80/show'
+        },
+        {
+            'title': 'Dandiya',
+            'image': 'img/dandiya.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 100/show'
+        },
+        {
+            'title': 'Halloween',
+            'image': 'img/hallowen.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 120/show'
+        },
+        {
+            'title': 'Circus Show',
+            'image': 'img/circus.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 90/show'
+        },
+        {
+            'title': 'Magic Show',
+            'image': 'img/magic_show.jpg',
+            'description': 'Click on Explore to check the related themes',
+            'price': 'Rs 110/show'
+        }
+    ]
+    return render_template('showthemes.html', show_themes=show_themes)
+
+   
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    res = RegisterForm()
+    print("form submitted:", res.validate_on_submit())
+    
+    if request.method=='POST' and res.validate_on_submit():
+        role = res.userrole.data
+        name = res.name.data
+        gender = res.gender.data
+        phone = res.phone.data
+        email = res.email.data
+        password = res.password.data
+
+        if role == 'user':
+            checkuser = user_register_form(role, name, gender, phone, email, password)
+            checkadmin = admin_register_form(role, name, gender, phone, email, password)
+            if checkuser == 0:
+                flash("User Register successfully")
+                return redirect(url_for('login'))  # Redirect to login after success
+            elif checkuser == 1:
+                flash("User Exists Already")
+            elif checkadmin:
+                flash("Error: Admin credentials cannot be used as user")
+                return redirect(url_for('register'))
+            else:
+                flash("Registration failed. Please fix the errors and try again")
+
+        elif role == 'admin':
+            checkadmin = admin_register_form(role, name, gender, phone, email, password)
+            checkuser = user_register_form(role, name, gender, phone, email, password)
+            if checkadmin == 0:
+                flash("Admin Register Successful")
+                return redirect(url_for('login'))  # Redirect to login after success
+            elif checkadmin == 1:
+                flash("Admin Exists Already")
+            elif checkuser:
+                flash("Error: User credentials cannot be used as Admin")
+            else:
+                flash('Registration failed. Please fix the errors and try again')
+    
+    return render_template('register.html', res=res)
+
+@app.route('/login',methods=['GET','POST'])
+def login():
+   res=LoginForm()
+   print("form submitted:",res.validate_on_submit())
+   if res.validate_on_submit():
+       role=res.userrole.data
+       email=res.email.data
+       password=res.password.data
+       print('Form submitted successfully')
+       print(f'role is:{role}')
+       
+       if role == 'user':
+          checkuser=user_login_form(role,email,password)
+          checkadmin=admin_login_form(role,email,password)
+          print(f"user_login return:{checkuser}")
+          if checkuser == "Incorrect":
+             flash("Invalid Credential or incorrect password.Please try again")
+             return redirect(url_for('login'))
+          elif checkuser == "No Data":
+             flash("No user found.Please register yourself")
+             return redirect(url_for("register"))
+          elif checkadmin:  
+            flash("Error: Admin cannot login as user")
+            return redirect(url_for("login"))  
+          else:
+            session['username']=checkuser
+            session['role'] = 'user' 
+            print(session['username'])
+            return redirect(url_for('index'))
+      
+                 
+          
+       elif role=='admin':
+          checkuser=user_login_form(role,email,password)
+          checkadmin=admin_login_form(role,email,password)
+          print(f"user_login return:{checkadmin}")
+            
+          if checkadmin == "Incorrect":
+             flash("Invalid Credential or incorrect password.Please try again")
+             return redirect(url_for('login'))
+          elif checkadmin == "No Data":
+             flash("No Admin found.Please register yourself")
+             return redirect(url_for("register"))
+          elif checkuser:
+             flash("Error:User cannot login as Admin")
+             return redirect(url_for('login'))
+          else:
+            session['username']=checkadmin
+            session['role'] = 'admin' 
+            print(session['username'])
+            flash("Admin Login successful")
+            return redirect(url_for('admin_dashboard'))
+   return render_template('login.html',res=res)
+
+@app.route('/booking', methods=['GET', 'POST'])
+@no_cache
+def booking():
+    if 'username' not in session:
+        flash("Please log in first")
+        return redirect(url_for('login'))
+
+    # Ensure theme is selected
+    theme_name = request.args.get('theme_name') or session.get('theme_name')
+    if not theme_name:
+        flash("Please select a theme first")
+        return redirect(url_for('index'))  
+
+    res = BookingForm()
+    session['theme_name'] = theme_name
+    res.theme_name.data = theme_name    
+
+    prices = {
+        'Racing Car': 120,
+        'Tour Car': 100,
+        'Marriage': 150,
+        'Halloween Theme': 130,
+        '31st Birthday': 90,
+        'Cake Cutting': 70,
+        'Child Theme':100,
+        'Restaurant':60,
+        'Meet Up':50,
+        'For Treat':70,
+        'Holi': 80,
+        'Dandiya': 100,
+        'Halloween': 120,
+        'Circus Show':90,
+        'Magic Show':110
+   
+    }
+
+    if request.method == 'POST' and res.validate_on_submit():
+        date = res.date.data
+        starttime = res.starttime.data
+        endtime = res.endtime.data
+        location = res.location.data
+        theme_name=res.theme_name.data
+
+        price = prices.get(theme_name, 0) 
+        if not theme_name or price == 0:
+            flash("Invalid theme selected.Please try again")
+            return redirect(url_for("booking"))
+
+        booking_status = book_events(date, starttime, endtime, location)
+        print(f"Booking Status return: {booking_status}")
+        print(f"Theme: {theme_name}, Price: {price}")
+        if booking_status == 0:
+            user_data = get_user_data(session['username'])
+            print("user_data:", user_data)
+
+            uid = user_data['uid']
+            conn = mysql.connect
+            cursor = conn.cursor()
+            insert_query = """
+                INSERT INTO booking_details1 (date, starttime, endtime, location, price, theme_name,uid)
+                VALUES (%s, %s, %s, %s, %s, %s,%s)
+            """
+            cursor.execute(insert_query, (
+                date, starttime, endtime, location, price, theme_name,uid
+            ))
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            session['payment_theme'] = theme_name
+            session['payment_price'] = price
+
+            session.pop('theme_name', None)
+            # flash("Booking Successfully")
+            return redirect(url_for('payment'))
+        elif booking_status == 1:
+            flash("Already booked. Choose another slot")
+            return redirect(url_for("booking"))
+        else:
+            return redirect(url_for("booking"))
+
+    return render_template('booking.html', res=res, theme_name=theme_name, price=prices)
+
+@app.route('/payment', methods=['GET', 'POST'])
+@no_cache
+def payment():
+    if 'username' not in session:
+        flash("Please log in first")
+        return redirect(url_for('login'))
+
+    price = session.get('payment_price')
+    theme_name = session.get('payment_theme')
+
+    if not price or not theme_name:
+        flash("Please complete a booking first.")
+        return redirect(url_for('booking'))
+
+    form = PaymentForm() 
+    if form.validate_on_submit():
+        session.pop('payment_price', None)
+        session.pop('payment_theme', None)
+        session['payment_done'] = True 
+         
+        return redirect(url_for('paysuccess'))
+
+    return render_template('payment.html', form=form, price=price, theme=theme_name)
+
+@app.route('/paysuccess', methods=['GET', 'POST'])
+@no_cache
+def paysuccess():
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+
+    if not session.get('payment_done'):
+        # flash("You are not authorized to access this page.")
+        return redirect(url_for('index'))
+
+    # Clear the flag so the user can’t revisit this page without paying again
+    session.pop('payment_done', None)
+
+    return render_template('paysuccess.html')
+
+# @app.route('/cart')
+# def cart():
+#     conn=mysql.connect
+#     cur=conn.cursor()
+#     user_data = get_user_data(session['username'])
+#     uid = user_data['uid']
+#     cur.execute("select * from booking_details where uid=%s",(uid,))
+
+@app.route('/cancel_booking/<int:booking_id>', methods=['POST'])
+def cancel_booking(booking_id):
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+
+    conn = mysql.connection
+    cur = conn.cursor()
+
+    try:
+        cur.execute("DELETE FROM booking_details1 WHERE bid = %s", (booking_id,))
+        conn.commit()
+        flash("Booking cancelled successfully.", "success")
+    except Exception as e:
+        flash("Error cancelling booking.", "danger")
+    finally:
+        cur.close()
+
+    return redirect(url_for('cart'))
+
+@app.route('/cart')
+@no_cache
+def cart():
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+
+    user_data = get_user_data(session['username'])
+    if not user_data:
+        flash("User data not found.")
+        return redirect(url_for('index'))
+
+    uid = user_data['uid']
+
+    conn = mysql.connection
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT * FROM booking_details1 WHERE uid = %s", (uid,))
+        bookings = cur.fetchall()
+    except Exception as e:
+        flash("Error fetching cart data.", "danger")
+        bookings = []
+    finally:
+        cur.close()
+
+    return render_template("cart.html", bookings=bookings)
+
+@app.route('/profile')
+@no_cache
+def profile():
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+
+    user_data = get_user_data(session['username'])
+    if not user_data:
+        flash("User data not found.")
+        return redirect(url_for('index'))
+
+    uid = user_data['uid']
+
+    conn = mysql.connection
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT * FROM user_details WHERE uid = %s", (uid,))
+        user_details = cur.fetchone()
+    except Exception as e:
+        flash("Error fetching cart data.", "danger")
+        user_details = []
+    finally:
+        cur.close()
+
+    return render_template("profile.html", user=user_details)
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+def edit_profile():
+    if 'username' not in session:
+        flash("Please log in first.")
+        return redirect(url_for('login'))
+    
+    user_data = get_user_data(session['username'])
+    #print(user_data)
+    if not user_data:
+        flash("User not found.")
+        return redirect(url_for('profile'))
+
+    if request.method == 'POST':
+        name = request.form['name']
+        phone = request.form['phone']
+        gender = request.form['gender']
+
+        conn = mysql.connection
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE user_details 
+            SET name = %s, phone = %s, gender = %s 
+            WHERE uid = %s
+        """, (name, phone, gender, user_data['uid']))
+        conn.commit()
+        cur.close()
+        flash("Profile updated successfully.")
+        return redirect(url_for('profile'))
+
+    return render_template("edit_profile.html", user=user_data)
+
+
+@app.route('/support', methods=['GET', 'POST'])
+def support():
+    form = SupportForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        message = form.message.data
+
+        conn = mysql.connection
+        cur = conn.cursor()
+        cur.execute("INSERT INTO support_messages (email, message) VALUES (%s, %s)", (email, message))
+        conn.commit()
+        cur.close()
+
+        flash("Support message submitted successfully!", "success")
+        return redirect(url_for('index'))
+
+    return render_template('support.html', form=form)
+@app.route('/logout')
+def logout():
+    session.clear() 
+    flash("Logged out successfully.", "success")
+    return redirect(url_for('login'))                
+
+if __name__=='__main__':
+  app.run(debug=True)
+
+config.py
+
+class Config:
+   SECRET_KEY = "your_secret_key_here"
+   MYSQL_HOST = "localhost"
+   MYSQL_PORT = 3306
+   MYSQL_CURSORCLASS = "DictCursor"
+   MYSQL_USER = "root"
+   MYSQL_PASSWORD = ""
+   MYSQL_DB = "mydb"
+form.py
+
+from flask_wtf import FlaskForm
+from wtforms import StringField,PasswordField,EmailField,IntegerField,SubmitField,DateField,SelectField,TimeField,RadioField,HiddenField,TextAreaField
+from wtforms.validators import DataRequired,Regexp,Length,EqualTo,Email
+from datetime import date
+
+class LoginForm(FlaskForm):
+   userrole=SelectField("Role",validators=[DataRequired()],choices=[('','Select The Role'),('user','User'),('admin','Admin')])
+   email=EmailField("Email Id",validators=[DataRequired(),Length(max=50),Regexp(r'[^@]+@[^@]+\.[^@]+', message='Email should be in correct format(e.g,user1@example.com)')], render_kw = {"placeholder": "Email Address", "class": "datafield"})
+   password=PasswordField("Password",validators=[DataRequired(),Length(min=6,max=50),Regexp(r'(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$',message='Password consist of at least 1 capital,small,alphanumeric charater')],render_kw={"placeholder": "Password", "class": "datafield"})
+   submit=SubmitField("Submit")
+
+class RegisterForm(FlaskForm):
+   userrole=SelectField("Role",validators=[DataRequired()],choices=[('','Select The Role'),('user','User'),('admin','Admin')])
+   name=StringField("Name",validators=[DataRequired(),Length(max=100),Regexp(r'^([A-Z][a-z]+)( [A-Z][a-z]+){1,2}',message='Name must start with capital letter & it should have a suurname')],render_kw={"placeholder": "Name", "class": "datafield"})
+   email=StringField("Email Id",validators=[DataRequired(),Length(max=50),Regexp(r'[^@]+@[^@]+\.[^@]+',message='Email should be in correct format(e.g,user1@example.com)')], render_kw = {"placeholder": "Email Address", "class": "datafield"})
+   gender=RadioField("Gender",validators=[DataRequired()],choices=[('Female','Female'),('Male','Male'),('Others','Others')])
+   phone=StringField("Phone Number",validators=[DataRequired(),Regexp(r'^\d{10}$',message='Phone no consist of 10 digit')],render_kw={"placeholder": "Phone Number", "class": "datafield"})
+   password=PasswordField("Password",validators=[DataRequired(),Length(min=6,max=50),Regexp(r'(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$',message='Password consist of at least 1 capital,small,alphanumeric charater')],render_kw={"placeholder": "Password", "class": "datafield"})
+   confirmpassword=PasswordField("Confirm Password",validators=[DataRequired(),EqualTo('password',message='Confirm Password must match Password')],render_kw = {"placeholder": "**********", "class": "datafield"})
+   submit=SubmitField("Submit")
+
+class BookingForm(FlaskForm):
+    min_date = date.today().isoformat()
+    date = DateField("Date", validators=[DataRequired()],render_kw={"class": "datafield", "min": min_date})
+    starttime = TimeField("Start Time", validators=[DataRequired()],render_kw={"class": "datafield"})
+    endtime = TimeField("End Time", validators=[DataRequired()],render_kw={"class": "datafield"})
+    location = SelectField("Location", validators=[DataRequired()],choices=[('', 'Select The Location'), ('Banglore', 'Banglore'),('Pune', 'Pune'), ('Manglore', 'Manglore')])
+    theme_name = HiddenField()
+    submit = SubmitField("BOOK NOW") 
+    
+
+class PaymentForm(FlaskForm):
+    submit = SubmitField('Pay Now') 
+
+class SupportForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    message = TextAreaField('Message', validators=[DataRequired()])
+
+      
+main.py
+
+from datetime import datetime,timedelta
+from flask import flash
+import re
+import MySQLdb.cursors # type: ignore
+
+def validate_details(email, name, password):
+   if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+",email):
+       return 1
+   if not re.fullmatch(r"^([A-Z][a-z]+)( [A-Z][a-z]+){1,2}$",name) and len(name)>100:
+       return 2
+   if (len(password)<8 or len(password) > 20 or not re.search(r"[@#$%&_]",password) or
+       not re.search(r"[A-Z]",password) or
+       not re.search(r"[a-z]",password) or
+       not re.search(r"[0-9]",password)):
+       return 3
+   return 0
+
 def get_all_users(search_query=None):
     from app import mysql
     con=mysql.connect
@@ -15,7 +643,6 @@ def get_all_bookings():
     con=mysql.connect
     cur=con.cursor(MySQLdb.cursors.DictCursor)
     cur.execute("SELECT bid, date, starttime, endtime, location, price, theme_name,uid FROM booking_details1")
-    print("hi booking details")
     bookings = cur.fetchall()
     cur.close()
     return bookings
@@ -28,3 +655,197 @@ def delete_user_by_id(user_id):
     mysql.connection.commit()
     cur.close()
     con.commit()
+
+    
+def get_user_data(name):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor(MySQLdb.cursors.DictCursor)
+   cur.execute("select uid,name,phone,email from user_details where name=%s",(name,))
+   res=cur.fetchone()
+   cur.close()
+   if res:
+      return res
+   else:
+      return None  
+
+def get_admin_data(name):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor(MySQLdb.cursors.DictCursor)
+   cur.execute("select name,email from admin_details where name=%s",(name,))
+   res=cur.fetchone()
+   cur.close()
+   if res:
+      return res
+   else:
+      return None     
+
+def user_login_form(userrole,email,password):
+   
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor()
+   cur.execute("select name,email,password from user_details where email=%s",(email,))
+   res=cur.fetchone()
+   cur.close()
+   if userrole=='user':
+        if res and res['password']==password:
+            print("user already exits.Login successfully")
+            return res['name']
+        elif res and res['password']!=password:
+            print("password is not correct")
+            return "Incorrect"
+        else:
+            print("No user found.First register yourself")      
+            return "No Data"
+
+def user_register_form(userrole,name,gender,phone,email,password):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor()
+   cur.execute("select password from user_details where email=%s",(email,)) 
+   res=cur.fetchone()
+   if userrole=='user':
+      if res is None:
+        cur.execute("insert into user_details(name,gender,phone,email,password) values(%s,%s,%s,%s,%s)",(name,gender,phone,email,password))
+        con.commit()
+        cur.close()
+        print("User Registration successful")    
+        return 0
+      elif res:
+        print("User Already exists") 
+        return 1  
+
+def admin_login_form(userrole,email,password):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor()
+   cur.execute("select name,email,password from admin_details where email=%s",(email,))
+   res=cur.fetchone()
+   cur.close()
+   if userrole=='admin':
+      if res and res['password']==password:
+         print("Admin already exits.Login successfully")
+         return res['name']
+      elif res and res['password']!=password:
+         print("password is not correct")
+         return "Incorrect"
+      else:
+         print("No admin found.First register yourself")      
+         return "No Data"   
+
+ 
+
+def admin_register_form(userrole,name,gender,phone,email,password):
+   from app import mysql
+   con=mysql.connect
+   cur=con.cursor()
+   cur.execute("select password from admin_details where email=%s",(email,)) 
+   res=cur.fetchone()
+   if userrole=='admin':
+      if res is None:
+        cur.execute("insert into admin_details(name,gender,phone,email,password) values(%s,%s,%s,%s,%s)",(name,gender,phone,email,password))
+        con.commit()
+        cur.close()
+        print(" Admin Registration successful")    
+        return 0
+      else:
+        print("Admin Already exists")     
+        return 1
+   
+def book_events(date, starttime, endtime, location):
+    from app import mysql
+    con = mysql.connect
+    cur = con.cursor()
+    start_dt = datetime.combine(date, starttime)
+    end_dt = datetime.combine(date, endtime)
+
+    # Ensure booking duration does not exceed 2 hours
+    if (end_dt - start_dt) > timedelta(hours=2):
+        flash("Booking duration cannot exceed 2 hours.")
+        return 2
+
+    # Conflict check — overlaps with existing bookings
+    cur.execute("""
+        SELECT * FROM booking_details1 
+        WHERE date = %s AND location = %s AND (
+            (starttime < %s AND endtime > %s) OR 
+            (starttime < %s AND endtime > %s) OR
+            (starttime >= %s AND endtime <= %s)
+        )
+    """, (date, location, endtime, starttime, endtime, endtime, starttime, endtime))
+
+    existing = cur.fetchone()
+    cur.close()
+
+    if existing is None:
+        return 0  # Available
+    else:
+        return 1  # Conflict
+
+
+def get_user_booking_count(username):
+    from app import mysql
+    con = mysql.connect
+    cur = con.cursor(MySQLdb.cursors.DictCursor)  # ✅ use DictCursor
+
+    try:
+        cur.execute("SELECT uid FROM user_details WHERE name = %s", (username,))
+        user = cur.fetchone()
+
+        if user is None:
+            return 0
+
+        user_id = user['uid']
+
+        cur.execute("SELECT COUNT(*) AS total FROM booking_details1 WHERE uid = %s", (user_id,))
+        count = cur.fetchone()['total']  # ✅ safe key access
+
+        return count
+    finally:
+        cur.close()
+
+table.sql
+
+drop database if exists `mydb`;
+create database `mydb`;
+use `mydb`;
+
+drop table if exists `user_details`;
+create table `user_details`(
+   uid int primary key auto_increment,
+   name varchar(50) not null,
+   gender varchar(10) not null,
+   phone varchar(10) not null unique,
+   email varchar(100) unique not null,
+   password varchar(100) not null
+)Engine=InnoDB;
+
+
+
+drop table if exists `admin_details`;
+create table `admin_details`(
+   aid int primary key auto_increment,
+   name varchar(50) not null,
+   gender varchar(10) not null,
+   phone varchar(20) unique not null,
+   email varchar(50) unique not null,
+   password varchar(50) not null
+)Engine=InnoDB;
+
+
+drop table if exists `booking_details1`;
+create table `booking_details1`(
+   bid int primary key auto_increment,
+   date date not null,
+   starttime time not null,
+   endtime time not null,
+   location varchar(200) not null,
+   price int not null,
+   theme_name varchar(100) not null,
+   uid int,
+   foreign key(uid) REFERENCES user_details(uid) on delete cascade
+)Engine=InnoDB;
+
+
